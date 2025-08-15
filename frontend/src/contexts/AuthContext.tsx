@@ -46,16 +46,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const validateToken = async (token: string) => {
     try {
-      // TODO: Implement actual token validation with backend
-      // For now, simulate a user - you can change the role here for testing
-      setUser({
-        id: '1',
-        email: 'admin@example.com',
-        name: 'Admin User',
-        role: 'admin' // Change this to 'admin', 'inspector', or 'workman' for testing
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      if (!response.ok) {
+        throw new Error('Token validation failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
     } catch (error) {
       localStorage.removeItem('authToken');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -64,19 +69,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // TODO: Implement actual login with backend
-      // For now, simulate successful login
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: 'Admin User',
-        role: 'admin'
-      };
-      
-      localStorage.setItem('authToken', 'mock-token');
-      setUser(mockUser);
-    } catch (error) {
-      throw new Error('Login failed');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+    } catch (error: any) {
+      localStorage.removeItem('authToken');
+      setUser(null);
+      throw new Error(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }

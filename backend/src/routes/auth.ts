@@ -1,7 +1,6 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import { authenticateUser, getUserFromToken } from '../services/authService';
 
 const router = express.Router();
 
@@ -10,24 +9,6 @@ const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
-
-// Mock user data - in production this would come from database
-const mockUsers = [
-  {
-    id: '1',
-    email: 'inspector@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'John Inspector',
-    role: 'inspector',
-  },
-  {
-    id: '2',
-    email: 'admin@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'Admin User',
-    role: 'admin',
-  },
-];
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
@@ -45,40 +26,18 @@ router.post('/login', async (req, res) => {
 
     const { email, password } = value;
 
-    // Find user
-    const user = mockUsers.find(u => u.email === email);
-    if (!user) {
+    const result = await authenticateUser(email, password);
+    if (!result) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
       });
     }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
-      });
-    }
-
-    // Create token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
 
     return res.json({
       success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      token: result.token,
+      user: result.user,
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -103,8 +62,7 @@ router.get('/me', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-    const user = mockUsers.find(u => u.id === decoded.userId);
+    const user = await getUserFromToken(token);
 
     if (!user) {
       return res.status(401).json({
@@ -115,12 +73,7 @@ router.get('/me', async (req, res) => {
 
     return res.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      user,
     });
   } catch (error) {
     console.error('Auth error:', error);

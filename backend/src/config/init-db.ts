@@ -1,30 +1,9 @@
 import pool from './database';
-import fs from 'fs';
-import path from 'path';
 import bcrypt from 'bcryptjs';
 
 async function initializeDatabase() {
   try {
-    console.log('🔄 Initializing database...');
-
-    // Read and execute schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    
-    // Execute the entire schema as one statement to handle multi-line functions
-    try {
-      await pool.query(schema);
-    } catch (error: any) {
-      // Log but don't fail on non-critical errors
-      if (error.code === '42710') { // duplicate_object
-        console.log('ℹ️  Some objects already exist, continuing...');
-      } else {
-        console.error('❌ Error executing schema:', error.message);
-        throw error;
-      }
-    }
-    
-    console.log('✅ Database schema created successfully');
+    console.log('🔄 Seeding database...');
 
     // Check if we need to add sample data
     const { rows: existingUsers } = await pool.query('SELECT COUNT(*) FROM users');

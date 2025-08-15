@@ -521,7 +521,14 @@ router.post('/', upload.single('pdf'), async (req, res) => {
     
     // Clean up file if it exists
     if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+      // Ensure the file to be deleted is within the upload directory
+      const UPLOAD_DIR = path.resolve(__dirname, '../../uploads');
+      const filePath = path.resolve(req.file.path);
+      if (filePath.startsWith(UPLOAD_DIR + path.sep)) {
+        fs.unlinkSync(filePath);
+      } else {
+        console.warn('Attempted to delete file outside of upload directory:', filePath);
+      }
     }
     
     return res.status(500).json({ 

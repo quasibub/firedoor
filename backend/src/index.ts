@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import path from 'path';
 
 import { errorHandler } from './middleware/errorHandler';
@@ -20,19 +19,17 @@ import userRoutes from './routes/users';
 import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
-
-// Load environment variables
-dotenv.config();
+import env from './config/env';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 // Security middleware
 app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: env.FRONTEND_URL,
   credentials: true,
 }));
 
@@ -52,7 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 
 // Logging middleware
-if (process.env.NODE_ENV !== 'test') {
+if (env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
 }
 
@@ -87,17 +84,19 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-  
-  // Initialize database
-  try {
-    await initializeDatabase();
-  } catch (error) {
-    console.error('❌ Failed to initialize database:', error);
-  }
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, async () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 
-export default app; 
+    // Initialize database
+    try {
+      await initializeDatabase();
+    } catch (error) {
+      console.error('❌ Failed to initialize database:', error);
+    }
+  });
+}
+
+export default app;

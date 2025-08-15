@@ -1,5 +1,5 @@
--- Add homes feature to the database
-
+exports.up = async function(knex) {
+  await knex.raw(`
 -- Create homes table
 CREATE TABLE IF NOT EXISTS homes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -26,7 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_inspections_home_id ON inspections(home_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_home_id ON tasks(home_id);
 CREATE INDEX IF NOT EXISTS idx_users_home_id ON users(home_id);
 
--- Insert default homes (you can modify these as needed)
+-- Insert default homes
 INSERT INTO homes (id, name, address, contact_person, contact_email, contact_phone) VALUES
     (gen_random_uuid(), 'Sunrise Care Home', '123 Sunrise Avenue, London', 'Sarah Johnson', 'sarah@sunrisecare.com', '020 1234 5678'),
     (gen_random_uuid(), 'Maple Gardens', '456 Maple Street, Manchester', 'Michael Brown', 'michael@maplegardens.com', '0161 234 5678'),
@@ -36,4 +36,19 @@ ON CONFLICT (name) DO NOTHING;
 -- Update trigger for homes table
 DROP TRIGGER IF EXISTS update_homes_updated_at ON homes;
 CREATE TRIGGER update_homes_updated_at BEFORE UPDATE ON homes
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+`);
+};
+
+exports.down = async function(knex) {
+  await knex.raw(`
+DROP TRIGGER IF EXISTS update_homes_updated_at ON homes;
+DROP INDEX IF EXISTS idx_inspections_home_id;
+DROP INDEX IF EXISTS idx_tasks_home_id;
+DROP INDEX IF EXISTS idx_users_home_id;
+ALTER TABLE inspections DROP COLUMN IF EXISTS home_id;
+ALTER TABLE tasks DROP COLUMN IF EXISTS home_id;
+ALTER TABLE users DROP COLUMN IF EXISTS home_id;
+DROP TABLE IF EXISTS homes;
+`);
+};

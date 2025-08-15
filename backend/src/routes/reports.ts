@@ -1,7 +1,9 @@
 import express from 'express';
 import Joi from 'joi';
+import authMiddleware from '../middleware/auth';
 
 const router = express.Router();
+router.use(authMiddleware);
 
 // Mock report data
 let mockReports = [

@@ -7,7 +7,7 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "test": "jest",
+    "test": "npm run build && jest",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "init-db": "ts-node src/config/init-db.ts",

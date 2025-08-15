@@ -1,8 +1,10 @@
 import express from 'express';
 import Joi from 'joi';
 import pool from '../config/database';
+import authMiddleware from '../middleware/auth';
 
 const router = express.Router();
+router.use(authMiddleware);
 
 // Validation schemas
 const createTaskSchema = Joi.object({

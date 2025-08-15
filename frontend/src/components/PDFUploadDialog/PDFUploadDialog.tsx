@@ -27,16 +27,35 @@ import {
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import apiClient from '../../api/client';
+import { AxiosError } from 'axios';
+import type { ChipProps } from '@mui/material';
+
+interface UploadedInspection {
+  location: string;
+  inspector_name: string;
+  date: string;
+  notes?: string;
+}
+
+interface UploadedTask {
+  doorId: string;
+  location: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+}
 
 interface PDFUploadDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: (inspection: any, tasks: any[]) => void;
+  onSuccess: (inspection: UploadedInspection, tasks: UploadedTask[]) => void;
 }
 
 interface ExtractedData {
-  inspection: any;
-  tasks: any[];
+  inspection: UploadedInspection;
+  tasks: UploadedTask[];
   summary: {
     totalDoors: number;
     compliantDoors: number;
@@ -80,11 +99,12 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
       });
 
       setExtractedData(response.data);
-    } catch (err: any) {
-      console.error('PDF upload error:', err);
+    } catch (err) {
+      const error = err as AxiosError<{ error?: string; details?: string }>;
+      console.error('PDF upload error:', error);
       setError(
-        err.response?.data?.error || 
-        err.response?.data?.details || 
+        error.response?.data?.error ||
+        error.response?.data?.details ||
         'Failed to upload and process PDF'
       );
     } finally {
@@ -114,7 +134,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
     onClose();
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): ChipProps['color'] => {
     switch (priority) {
       case 'critical':
         return 'error';
@@ -289,7 +309,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
                           <Chip 
                             label={task.priority} 
                             size="small" 
-                            color={getPriorityColor(task.priority) as any}
+                            color={getPriorityColor(task.priority)}
                             sx={{ mr: 1 }}
                           />
                           {task.category && (
@@ -300,9 +320,9 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
                               sx={{ mr: 1 }}
                             />
                           )}
-                          {task.door_id && (
+                          {task.doorId && (
                             <Chip 
-                              label={`Door: ${task.door_id}`} 
+                              label={`Door: ${task.doorId}`} 
                               size="small" 
                               variant="outlined"
                             />
@@ -350,10 +370,10 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
           >
             Create Inspection & Tasks
           </Button>
-        )}
+        </DialogActions>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default PDFUploadDialog; 
+export default PDFUploadDialog;

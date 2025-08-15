@@ -46,6 +46,16 @@ interface Inspection {
   notes: string;
 }
 
+interface UploadedTask {
+  doorId: string;
+  location: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+}
+
 const Inspections: React.FC = () => {
   const { user } = useAuth();
   const { selectedHome } = useHome();
@@ -152,7 +162,7 @@ const Inspections: React.FC = () => {
     }
   };
 
-  const handlePDFUploadSuccess = (inspection: Inspection, tasks: any[]) => {
+  const handlePDFUploadSuccess = (_inspection: Inspection, _tasks: UploadedTask[]) => {
     // Refresh the inspections list to show the new inspection
     fetchInspections();
     setOpenPDFDialog(false);

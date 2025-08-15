@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../../api/client';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+type JsPDFWithAutoTable = jsPDF & { lastAutoTable?: { finalY: number } };
 import {
   Box,
   Typography,
@@ -68,8 +70,27 @@ interface Task {
   inspection_location: string;
   inspector_name: string;
   inspection_date: string;
-  photos: any[];
-  rejections: any[];
+  photos: TaskPhoto[];
+  rejections: TaskRejection[];
+}
+
+interface TaskPhoto {
+  id: string;
+  task_id: string;
+  photo_type: string;
+  description: string;
+  photo_url: string;
+  created_at: string;
+  uploaded_by_name: string;
+}
+
+interface TaskRejection {
+  id: string;
+  task_id: string;
+  rejection_reason: string;
+  alternative_suggestion: string;
+  created_at: string;
+  rejected_by_name: string;
 }
 
 interface RemediationReport {
@@ -381,7 +402,7 @@ PRIORITY BREAKDOWN
   const exportAsPDF = async () => {
     if (!report) return;
     
-    const doc = new jsPDF();
+    const doc: JsPDFWithAutoTable = new jsPDF();
     let yPosition = 20;
     
     // Title
@@ -443,7 +464,7 @@ PRIORITY BREAKDOWN
        styles: { fontSize: 9 }
      });
      
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
+     yPosition = (doc.lastAutoTable?.finalY ?? yPosition) + 15;
     
     // Category Performance Table
     doc.setFontSize(14);
@@ -467,7 +488,7 @@ PRIORITY BREAKDOWN
        styles: { fontSize: 9 }
      });
      
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
+     yPosition = (doc.lastAutoTable?.finalY ?? yPosition) + 15;
     
     // Location Performance Table
     doc.setFontSize(14);
@@ -491,7 +512,7 @@ PRIORITY BREAKDOWN
        styles: { fontSize: 9 }
      });
      
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
+     yPosition = (doc.lastAutoTable?.finalY ?? yPosition) + 15;
     
     // Recent Activity
     doc.setFontSize(14);

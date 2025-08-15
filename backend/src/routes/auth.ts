@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import env from '../config/env';
 import asyncHandler from '../utils/asyncHandler';
 
 const router = express.Router();
@@ -66,7 +67,7 @@ router.post('/login', asyncHandler(async (req, res) => {
     // Create token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
+      env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -95,7 +96,7 @@ router.get('/me', asyncHandler(async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as any;
     const user = mockUsers.find(u => u.id === decoded.userId);
 
     if (!user) {

@@ -1,7 +1,6 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import { authenticateUser, getUserFromToken } from '../services/authService';
 import env from '../config/env';
 import asyncHandler from '../utils/asyncHandler';
 
@@ -12,24 +11,6 @@ const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
-
-// Mock user data - in production this would come from database
-const mockUsers = [
-  {
-    id: '1',
-    email: 'inspector@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'John Inspector',
-    role: 'inspector',
-  },
-  {
-    id: '2',
-    email: 'admin@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'Admin User',
-    role: 'admin',
-  },
-];
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
@@ -46,40 +27,18 @@ router.post('/login', asyncHandler(async (req, res) => {
 
     const { email, password } = value;
 
-    // Find user
-    const user = mockUsers.find(u => u.email === email);
-    if (!user) {
+    const result = await authenticateUser(email, password);
+    if (!result) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
       });
     }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
-      });
-    }
-
-    // Create token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
 
     return res.json({
       success: true,
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      token: result.token,
+      user: result.user,
     });
 }));
 
@@ -88,7 +47,6 @@ router.post('/login', asyncHandler(async (req, res) => {
 // @access  Private
 router.get('/me', asyncHandler(async (req, res) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -96,9 +54,7 @@ router.get('/me', asyncHandler(async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, env.JWT_SECRET) as any;
-    const user = mockUsers.find(u => u.id === decoded.userId);
-
+    const user = await getUserFromToken(token);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -108,13 +64,8 @@ router.get('/me', asyncHandler(async (req, res) => {
 
     return res.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      user,
     });
 }));
 
-export default router; 
+export default router;

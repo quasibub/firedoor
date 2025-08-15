@@ -34,6 +34,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
 import axios from 'axios';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 interface Task {
   id: string;
@@ -457,7 +458,9 @@ const Tasks: React.FC = () => {
                 <Select
                   value={filters.status}
                   label="Status"
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+                  onChange={(e: SelectChangeEvent<'all' | Task['status']>) =>
+                    setFilters({ ...filters, status: e.target.value })
+                  }
                 >
                   <MenuItem value="all">All Statuses</MenuItem>
                   <MenuItem value="pending">Pending</MenuItem>
@@ -474,7 +477,9 @@ const Tasks: React.FC = () => {
                 <Select
                   value={filters.priority}
                   label="Priority"
-                  onChange={(e) => setFilters({ ...filters, priority: e.target.value as any })}
+                  onChange={(e: SelectChangeEvent<'all' | Task['priority']>) =>
+                    setFilters({ ...filters, priority: e.target.value })
+                  }
                 >
                   <MenuItem value="all">All Priorities</MenuItem>
                   <MenuItem value="low">Low</MenuItem>

@@ -41,6 +41,8 @@ import {
   VisibilityOff
 } from '@mui/icons-material';
 import axios from 'axios';
+import { SelectChangeEvent } from '@mui/material/Select';
+import type { ChipProps } from '@mui/material';
 
 interface Task {
   id: string;
@@ -220,23 +222,33 @@ const WorkmenTasks: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): ChipProps['color'] => {
     switch (priority) {
-      case 'critical': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'success';
-      default: return 'default';
+      case 'critical':
+        return 'error';
+      case 'high':
+        return 'warning';
+      case 'medium':
+        return 'info';
+      case 'low':
+        return 'success';
+      default:
+        return 'default';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): ChipProps['color'] => {
     switch (status) {
-      case 'completed': return 'success';
-      case 'in-progress': return 'info';
-      case 'rejected': return 'error';
-      case 'cancelled': return 'default';
-      default: return 'warning';
+      case 'completed':
+        return 'success';
+      case 'in-progress':
+        return 'info';
+      case 'rejected':
+        return 'error';
+      case 'cancelled':
+        return 'default';
+      default:
+        return 'warning';
     }
   };
 
@@ -300,7 +312,9 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.status}
                     label="Status"
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+                    onChange={(e: SelectChangeEvent<'all' | Task['status']>) =>
+                      setFilters({ ...filters, status: e.target.value })
+                    }
                   >
                     <MenuItem value="all">All Statuses</MenuItem>
                     <MenuItem value="pending">Pending</MenuItem>
@@ -317,7 +331,9 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.priority}
                     label="Priority"
-                    onChange={(e) => setFilters({ ...filters, priority: e.target.value as any })}
+                    onChange={(e: SelectChangeEvent<'all' | Task['priority']>) =>
+                      setFilters({ ...filters, priority: e.target.value })
+                    }
                   >
                     <MenuItem value="all">All Priorities</MenuItem>
                     <MenuItem value="low">Low</MenuItem>
@@ -397,14 +413,14 @@ const WorkmenTasks: React.FC = () => {
                   primary={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="h6">{task.title}</Typography>
-                      <Chip 
-                        label={task.priority} 
-                        color={getPriorityColor(task.priority) as any}
+                      <Chip
+                        label={task.priority}
+                        color={getPriorityColor(task.priority)}
                         size="small"
                       />
-                      <Chip 
-                        label={task.status} 
-                        color={getStatusColor(task.status) as any}
+                      <Chip
+                        label={task.status}
+                        color={getStatusColor(task.status)}
                         size="small"
                       />
                     </Box>
@@ -568,8 +584,8 @@ const WorkmenTasks: React.FC = () => {
               <Typography variant="body1" paragraph>{selectedTask.description}</Typography>
               
               <Box display="flex" gap={1} mb={2}>
-                <Chip label={selectedTask.priority} color={getPriorityColor(selectedTask.priority) as any} />
-                <Chip label={selectedTask.status} color={getStatusColor(selectedTask.status) as any} />
+                <Chip label={selectedTask.priority} color={getPriorityColor(selectedTask.priority)} />
+                <Chip label={selectedTask.status} color={getStatusColor(selectedTask.status)} />
               </Box>
               
               <Typography variant="body2" color="textSecondary" gutterBottom>

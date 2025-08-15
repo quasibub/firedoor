@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import apiClient from '../api/client';
 
 interface Home {
   id: string;
@@ -46,12 +47,8 @@ export const HomeProvider: React.FC<HomeProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/homes');
-      if (!response.ok) {
-        throw new Error('Failed to fetch homes');
-      }
-      
-      const data = await response.json();
+      const response = await apiClient.get('/homes');
+      const data = response.data;
       if (data.success) {
         setHomes(data.data);
         

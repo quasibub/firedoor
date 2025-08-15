@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
-import axios from 'axios';
+import apiClient from '../../api/client';
 
 interface Task {
   id: string;
@@ -103,11 +103,8 @@ const Tasks: React.FC = () => {
       }
       
       // Request a larger limit to get more tasks (or all tasks)
-      const response = await fetch(`http://localhost:5000/api/tasks?limit=2000&home_id=${selectedHome.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
-      }
-      const data = await response.json();
+      const response = await apiClient.get(`/tasks?limit=2000&home_id=${selectedHome.id}`);
+      const data = response.data;
       if (data.success) {
         setTasks(data.data);
       } else {
@@ -160,28 +157,10 @@ const Tasks: React.FC = () => {
     try {
       if (editingTask) {
         // Update existing task
-        const response = await fetch(`http://localhost:5000/api/tasks/${editingTask.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-        if (!response.ok) {
-          throw new Error('Failed to update task');
-        }
+        await apiClient.put(`/tasks/${editingTask.id}`, formData);
       } else {
         // Create new task
-        const response = await fetch('http://localhost:5000/api/tasks', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-        if (!response.ok) {
-          throw new Error('Failed to create task');
-        }
+        await apiClient.post('/tasks', formData);
       }
       fetchTasks(); // Refresh the list
       handleCloseDialog();
@@ -192,12 +171,7 @@ const Tasks: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete task');
-      }
+      await apiClient.delete(`/tasks/${id}`);
       fetchTasks(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -206,19 +180,10 @@ const Tasks: React.FC = () => {
 
   const handleComplete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-        }),
+      await apiClient.put(`/tasks/${id}`, {
+        status: 'completed',
+        completed_at: new Date().toISOString(),
       });
-      if (!response.ok) {
-        throw new Error('Failed to complete task');
-      }
       fetchTasks(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -255,7 +220,7 @@ const Tasks: React.FC = () => {
     formData.append('description', photoDescription);
 
     try {
-      await axios.post(`http://localhost:5000/api/task-photos/${selectedTask.id}`, formData, {
+      await apiClient.post(`/task-photos/${selectedTask.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -274,7 +239,7 @@ const Tasks: React.FC = () => {
     if (!selectedTask || !rejectionReason.trim()) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/task-rejections/${selectedTask.id}`, {
+      await apiClient.post(`/task-rejections/${selectedTask.id}`, {
         rejection_reason: rejectionReason,
         alternative_suggestion: alternativeSuggestion
       });

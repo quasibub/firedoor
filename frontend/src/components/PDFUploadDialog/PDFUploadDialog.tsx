@@ -26,7 +26,7 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
+import apiClient from '../../api/client';
 
 interface PDFUploadDialogProps {
   open: boolean;
@@ -73,7 +73,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      const response = await axios.post('http://localhost:5000/api/pdf-upload', formData, {
+      const response = await apiClient.post('/pdf-upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

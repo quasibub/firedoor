@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import apiClient from '../../api/client';
 
 interface Home {
   id: string;
@@ -94,24 +95,10 @@ const Homes: React.FC = () => {
         return;
       }
 
-      const url = editingHome 
-        ? `http://localhost:5000/api/homes/${editingHome.id}`
-        : 'http://localhost:5000/api/homes';
-      
-      const method = editingHome ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to save home');
+      if (editingHome) {
+        await apiClient.put(`/homes/${editingHome.id}`, formData);
+      } else {
+        await apiClient.post('/homes', formData);
       }
 
       await refreshHomes();
@@ -127,14 +114,7 @@ const Homes: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/homes/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete home');
-      }
+      await apiClient.delete(`/homes/${id}`);
 
       await refreshHomes();
     } catch (err) {

@@ -16,6 +16,7 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 import { useHome } from '../../contexts/HomeContext';
+import apiClient from '../../api/client';
 
 interface Inspection {
   id: string;
@@ -52,18 +53,12 @@ const Dashboard: React.FC = () => {
         }
         
         // Fetch inspections for selected home
-        const inspectionsResponse = await fetch(`http://localhost:5000/api/inspections?limit=100&home_id=${selectedHome.id}`);
-        if (!inspectionsResponse.ok) {
-          throw new Error('Failed to fetch inspections');
-        }
-        const inspectionsData = await inspectionsResponse.json();
+        const inspectionsResponse = await apiClient.get(`/inspections?limit=100&home_id=${selectedHome.id}`);
+        const inspectionsData = inspectionsResponse.data;
         
         // Fetch tasks for selected home
-        const tasksResponse = await fetch(`http://localhost:5000/api/tasks?limit=1000&home_id=${selectedHome.id}`);
-        if (!tasksResponse.ok) {
-          throw new Error('Failed to fetch tasks');
-        }
-        const tasksData = await tasksResponse.json();
+        const tasksResponse = await apiClient.get(`/tasks?limit=1000&home_id=${selectedHome.id}`);
+        const tasksData = tasksResponse.data;
         
         if (inspectionsData.success) {
           setInspections(inspectionsData.data);

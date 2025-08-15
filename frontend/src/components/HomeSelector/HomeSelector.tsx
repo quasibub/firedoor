@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   FormControl,
@@ -6,20 +6,18 @@ import {
   MenuItem,
   Typography,
   Chip,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   Home as HomeIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useHome } from '../../contexts/HomeContext';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 const HomeSelector: React.FC = () => {
   const { selectedHome, homes, loading, setSelectedHome } = useHome();
-  const [open, setOpen] = useState(false);
 
-  const handleHomeChange = (event: any) => {
+  const handleHomeChange = (event: SelectChangeEvent<string>) => {
     const homeId = event.target.value;
     const home = homes.find(h => h.id === homeId);
     setSelectedHome(home || null);

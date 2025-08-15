@@ -1,8 +1,10 @@
 import express from 'express';
 import pool from '../config/database';
 import Joi from 'joi';
+import authMiddleware from '../middleware/auth';
 
 const router = express.Router();
+router.use(authMiddleware);
 
 // Validation schemas
 const createHomeSchema = Joi.object({
@@ -78,7 +80,7 @@ router.post('/', async (req, res) => {
     ]);
     
     return res.status(201).json({ success: true, data: home });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create home error:', error);
     if (error.code === '23505') { // Unique constraint violation
       return res.status(400).json({ success: false, error: 'Home name already exists' });
@@ -127,7 +129,7 @@ router.put('/:id', async (req, res) => {
     ]);
     
     return res.json({ success: true, data: home });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update home error:', error);
     if (error.code === '23505') { // Unique constraint violation
       return res.status(400).json({ success: false, error: 'Home name already exists' });
@@ -177,7 +179,7 @@ router.delete('/:id', async (req, res) => {
     await pool.query('DELETE FROM homes WHERE id = $1', [id]);
     
     return res.json({ success: true, message: 'Home deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete home error:', error);
     return res.status(500).json({ success: false, error: 'Failed to delete home' });
   }

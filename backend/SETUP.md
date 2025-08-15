@@ -77,17 +77,17 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 **Replace `your_password` with the password you set during PostgreSQL installation.**
 
-### 4. Initialize Database
+### 4. Run Migrations
 
 ```bash
 cd backend
-npm run init-db
+npm run migrate
+npm run init-db # optional sample data
 ```
 
 This will:
-- Create all necessary tables
-- Add sample data
-- Set up indexes and triggers
+- Apply all database migrations
+- (Optional) Add sample data for development
 
 ### 5. Start the Application
 

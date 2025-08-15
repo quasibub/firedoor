@@ -1,3 +1,7 @@
+const { Knex } = require('knex');
+
+exports.up = async function(knex) {
+  await knex.raw(`
 -- Fire Door Inspection App Database Schema
 
 -- Create inspections table
@@ -75,4 +79,18 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+`);
+};
+
+exports.down = async function(knex) {
+  await knex.raw(`
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON tasks;
+DROP TRIGGER IF EXISTS update_inspections_updated_at ON inspections;
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+DROP FUNCTION IF EXISTS update_updated_at_column;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS inspections;
+DROP TABLE IF EXISTS users;
+`);
+};

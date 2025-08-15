@@ -1,5 +1,5 @@
--- Add workmen features to the database
-
+exports.up = async function(knex) {
+  await knex.raw(`
 -- Update users table to include workmen role
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('inspector', 'admin', 'workman'));
@@ -42,4 +42,22 @@ CREATE TRIGGER update_task_photos_updated_at BEFORE UPDATE ON task_photos
 -- Create trigger for task_rejections
 DROP TRIGGER IF EXISTS update_task_rejections_updated_at ON task_rejections;
 CREATE TRIGGER update_task_rejections_updated_at BEFORE UPDATE ON task_rejections
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+`);
+};
+
+exports.down = async function(knex) {
+  await knex.raw(`
+DROP TRIGGER IF EXISTS update_task_photos_updated_at ON task_photos;
+DROP TRIGGER IF EXISTS update_task_rejections_updated_at ON task_rejections;
+DROP INDEX IF EXISTS idx_task_photos_task_id;
+DROP INDEX IF EXISTS idx_task_rejections_task_id;
+DROP INDEX IF EXISTS idx_users_role;
+DROP TABLE IF EXISTS task_photos;
+DROP TABLE IF EXISTS task_rejections;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('inspector', 'admin'));
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_status_check;
+ALTER TABLE tasks ADD CONSTRAINT tasks_status_check CHECK (status IN ('pending', 'in-progress', 'completed'));
+`);
+};

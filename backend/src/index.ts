@@ -84,17 +84,19 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-  
-  // Initialize database
-  try {
-    await initializeDatabase();
-  } catch (error) {
-    console.error('❌ Failed to initialize database:', error);
-  }
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, async () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
 
-export default app; 
+    // Initialize database
+    try {
+      await initializeDatabase();
+    } catch (error) {
+      console.error('❌ Failed to initialize database:', error);
+    }
+  });
+}
+
+export default app;

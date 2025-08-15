@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PDFUploadDialog from '../../components/PDFUploadDialog/PDFUploadDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import apiClient from '../../api/client';
 import {
   Box,
   Typography,
@@ -86,11 +87,8 @@ const Inspections: React.FC = () => {
       }
       
       // Request a larger limit to get more inspections
-      const response = await fetch(`http://localhost:5000/api/inspections?limit=100&home_id=${selectedHome.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch inspections');
-      }
-      const data = await response.json();
+      const response = await apiClient.get(`/inspections?limit=100&home_id=${selectedHome.id}`);
+      const data = response.data;
       if (data.success) {
         setInspections(data.data);
       } else {
@@ -135,36 +133,18 @@ const Inspections: React.FC = () => {
     try {
       if (editingInspection) {
         // Update existing inspection
-        const response = await fetch(`http://localhost:5000/api/inspections/${editingInspection.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            location: formData.location,
-            totalDoors: parseInt(formData.total_doors),
-            notes: formData.notes,
-          }),
+        await apiClient.put(`/inspections/${editingInspection.id}`, {
+          location: formData.location,
+          totalDoors: parseInt(formData.total_doors),
+          notes: formData.notes,
         });
-        if (!response.ok) {
-          throw new Error('Failed to update inspection');
-        }
       } else {
         // Create new inspection
-        const response = await fetch('http://localhost:5000/api/inspections', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            location: formData.location,
-            totalDoors: parseInt(formData.total_doors),
-            notes: formData.notes,
-          }),
+        await apiClient.post('/inspections', {
+          location: formData.location,
+          totalDoors: parseInt(formData.total_doors),
+          notes: formData.notes,
         });
-        if (!response.ok) {
-          throw new Error('Failed to create inspection');
-        }
       }
       fetchInspections(); // Refresh the list
       handleCloseDialog();
@@ -175,12 +155,7 @@ const Inspections: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/inspections/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete inspection');
-      }
+      await apiClient.delete(`/inspections/${id}`);
       fetchInspections(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

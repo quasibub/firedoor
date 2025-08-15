@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../api/client';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -147,11 +148,8 @@ const RemediationReports: React.FC = () => {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/remediation-reports');
-      if (!response.ok) {
-        throw new Error('Failed to fetch remediation report');
-      }
-      const data = await response.json();
+      const response = await apiClient.get('/remediation-reports');
+      const data = response.data;
       if (data.success) {
         setReport(data.data);
       } else {
@@ -596,11 +594,9 @@ PRIORITY BREAKDOWN
              
              try {
                // Load the image from the server
-               const imageUrl = `http://localhost:5000${photo.photo_url}`;
-               
-               // Fetch the image as blob
-               const response = await fetch(imageUrl);
-               const blob = await response.blob();
+               const baseUrl = process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || '';
+               const response = await apiClient.get(photo.photo_url, { baseURL: baseUrl, responseType: 'blob' });
+               const blob = response.data as Blob;
                
                // Convert blob to base64
                const reader = new FileReader();

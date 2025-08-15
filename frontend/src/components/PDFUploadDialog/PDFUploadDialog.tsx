@@ -26,7 +26,8 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import axios, { AxiosError } from 'axios';
+import apiClient from '../../api/client';
+import { AxiosError } from 'axios';
 import type { ChipProps } from '@mui/material';
 
 interface UploadedInspection {
@@ -70,7 +71,6 @@ interface ExtractedData {
   totalPages: number;
 }
 
-
 const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
   open,
   onClose,
@@ -92,7 +92,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      const response = await axios.post('http://localhost:5000/api/pdf-upload', formData, {
+      const response = await apiClient.post('/pdf-upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -320,9 +320,9 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
                               sx={{ mr: 1 }}
                             />
                           )}
-                          {task.door_id && (
+                          {task.doorId && (
                             <Chip 
-                              label={`Door: ${task.door_id}`} 
+                              label={`Door: ${task.doorId}`} 
                               size="small" 
                               variant="outlined"
                             />
@@ -370,10 +370,10 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
           >
             Create Inspection & Tasks
           </Button>
-        )}
+        </DialogActions>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default PDFUploadDialog; 
+export default PDFUploadDialog;

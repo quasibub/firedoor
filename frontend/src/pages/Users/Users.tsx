@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import apiClient from '../../api/client';
 import {
   Box,
   Typography,
@@ -75,11 +76,8 @@ const Users: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
+      const response = await apiClient.get('/users');
+      const data = response.data;
       if (data.success) {
         setUsers(data.data);
       } else {
@@ -133,30 +131,10 @@ const Users: React.FC = () => {
 
       if (editingUser) {
         // Update existing user
-        const response = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submitData),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update user');
-        }
+        await apiClient.put(`/users/${editingUser.id}`, submitData);
       } else {
         // Create new user
-        const response = await fetch('http://localhost:5000/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submitData),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create user');
-        }
+        await apiClient.post('/users', submitData);
       }
       fetchUsers(); // Refresh the list
       handleCloseDialog();
@@ -171,12 +149,7 @@ const Users: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete user');
-      }
+      await apiClient.delete(`/users/${id}`);
       fetchUsers(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

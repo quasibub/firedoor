@@ -40,7 +40,7 @@ import {
   Visibility,
   VisibilityOff
 } from '@mui/icons-material';
-import axios from 'axios';
+import apiClient from '../../api/client';
 import { SelectChangeEvent } from '@mui/material/Select';
 import type { ChipProps } from '@mui/material';
 
@@ -114,7 +114,7 @@ const WorkmenTasks: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/tasks?assigned_to=current_user');
+      const response = await apiClient.get('/tasks?assigned_to=current_user');
       setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -126,7 +126,7 @@ const WorkmenTasks: React.FC = () => {
 
   const fetchTaskPhotos = async (taskId: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/task-photos/${taskId}`);
+      const response = await apiClient.get(`/task-photos/${taskId}`);
       setTaskPhotos(response.data.photos || []);
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -135,7 +135,7 @@ const WorkmenTasks: React.FC = () => {
 
   const fetchTaskRejection = async (taskId: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/task-rejections/${taskId}`);
+      const response = await apiClient.get(`/task-rejections/${taskId}`);
       setTaskRejection(response.data.rejection);
     } catch (error) {
       // Task might not be rejected, so this is expected
@@ -167,7 +167,7 @@ const WorkmenTasks: React.FC = () => {
 
   const handleCompleteTask = async (taskId: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/tasks/${taskId}`, {
+      await apiClient.put(`/tasks/${taskId}`, {
         status: 'completed',
         completed_at: new Date().toISOString()
       });
@@ -187,7 +187,7 @@ const WorkmenTasks: React.FC = () => {
     formData.append('description', photoDescription);
 
     try {
-      await axios.post(`http://localhost:5000/api/task-photos/${selectedTask.id}`, formData, {
+      await apiClient.post(`/task-photos/${selectedTask.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -207,7 +207,7 @@ const WorkmenTasks: React.FC = () => {
     if (!selectedTask || !rejectionReason.trim()) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/task-rejections/${selectedTask.id}`, {
+      await apiClient.post(`/task-rejections/${selectedTask.id}`, {
         rejection_reason: rejectionReason,
         alternative_suggestion: alternativeSuggestion
       });
@@ -635,4 +635,4 @@ const WorkmenTasks: React.FC = () => {
   );
 };
 
-export default WorkmenTasks; 
+export default WorkmenTasks;

@@ -3,6 +3,7 @@ import { Box, Typography, Button, Card, CardContent, Grid, LinearProgress } from
 import { Add as AddIcon } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import apiClient from '../../api/client';
 import TaskFilters from '../../components/Tasks/TaskFilters';
 import TaskList from '../../components/Tasks/TaskList';
 import TaskDialogs from '../../components/Tasks/TaskDialogs';
@@ -61,9 +62,11 @@ const Tasks: React.FC = () => {
         setTasks([]);
         return;
       }
-      const response = await fetch(`http://localhost:5000/api/tasks?limit=2000&home_id=${selectedHome.id}`);
-      if (!response.ok) throw new Error('Failed to fetch tasks');
-      const data: ApiResponse<Task[]> = await response.json();
+      
+      // Request a larger limit to get more tasks (or all tasks)
+      const response = await apiClient.get(`/tasks?limit=2000&home_id=${selectedHome.id}`);
+      const data = response.data;
+      
       if (data.success) {
         setTasks(data.data);
       } else {
@@ -115,19 +118,11 @@ const Tasks: React.FC = () => {
   const handleSubmit = async () => {
     try {
       if (editingTask) {
-        const response = await fetch(`http://localhost:5000/api/tasks/${editingTask.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-        if (!response.ok) throw new Error('Failed to update task');
+        // Update existing task
+        await apiClient.put(`/tasks/${editingTask.id}`, formData);
       } else {
-        const response = await fetch('http://localhost:5000/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-        if (!response.ok) throw new Error('Failed to create task');
+        // Create new task
+        await apiClient.post('/tasks', formData);
       }
       fetchTasks();
       handleCloseDialog();
@@ -138,9 +133,8 @@ const Tasks: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Failed to delete task');
-      fetchTasks();
+      await apiClient.delete(`/tasks/${id}`);
+      fetchTasks(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -148,13 +142,11 @@ const Tasks: React.FC = () => {
 
   const handleComplete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed', completed_at: new Date().toISOString() }),
+      await apiClient.put(`/tasks/${id}`, {
+        status: 'completed',
+        completed_at: new Date().toISOString(),
       });
-      if (!response.ok) throw new Error('Failed to complete task');
-      fetchTasks();
+      fetchTasks(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -186,11 +178,11 @@ const Tasks: React.FC = () => {
     fd.append('photoType', 'completion');
     fd.append('description', photoDescription);
     try {
-      const response = await fetch(`http://localhost:5000/api/task-photos/${selectedTask.id}`, {
-        method: 'POST',
-        body: fd,
+      await apiClient.post(`/task-photos/${selectedTask.id}`, fd, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      if (!response.ok) throw new Error('Failed to upload photo');
       setPhotoDialogOpen(false);
       setPhotoFile(null);
       setPhotoDescription('');
@@ -203,16 +195,10 @@ const Tasks: React.FC = () => {
   const handleRejectTask = async () => {
     if (!selectedTask || !rejectionReason.trim()) return;
     try {
-      const payload: RejectionPayload = {
+      await apiClient.post(`/task-rejections/${selectedTask.id}`, {
         rejection_reason: rejectionReason,
         alternative_suggestion: alternativeSuggestion,
-      };
-      const response = await fetch(`http://localhost:5000/api/task-rejections/${selectedTask.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('Failed to reject task');
       setRejectionDialogOpen(false);
       setRejectionReason('');
       setAlternativeSuggestion('');

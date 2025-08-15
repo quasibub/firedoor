@@ -2,7 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 import pool from '../config/database';
 import authMiddleware from '../middleware/auth';
-
+import asyncHandler from '../utils/asyncHandler';
 const router = express.Router();
 router.use(authMiddleware);
 
@@ -27,8 +27,7 @@ const updateTaskSchema = Joi.object({
 // @route   GET /api/tasks
 // @desc    Get all tasks
 // @access  Private
-router.get('/', async (req, res) => {
-  try {
+router.get('/', asyncHandler(async (req, res) => {
     const { status, priority, inspectionId, home_id, page = 1, limit = 10 } = req.query;
     
     let query = `
@@ -90,22 +89,14 @@ router.get('/', async (req, res) => {
         itemsPerPage: Number(limit),
       },
     });
-  } catch (error) {
-    console.error('Get tasks error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
-  }
-});
+}));
 
 // @route   GET /api/tasks/:id
 // @desc    Get task by ID
 // @access  Private
-router.get('/:id', async (req, res) => {
-  try {
+router.get('/:id', asyncHandler(async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
-    
+
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
@@ -117,20 +108,12 @@ router.get('/:id', async (req, res) => {
       success: true,
       data: rows[0],
     });
-  } catch (error) {
-    console.error('Get task error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
-  }
-});
+}));
 
 // @route   POST /api/tasks
 // @desc    Create new task
 // @access  Private
-router.post('/', async (req, res) => {
-  try {
+router.post('/', asyncHandler(async (req, res) => {
     const { error, value } = createTaskSchema.validate(req.body);
     if (error) {
       return res.status(400).json({
@@ -160,20 +143,12 @@ router.post('/', async (req, res) => {
       success: true,
       data: newTask,
     });
-  } catch (error) {
-    console.error('Create task error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
-  }
-});
+}));
 
 // @route   PUT /api/tasks/:id
 // @desc    Update task
 // @access  Private
-router.put('/:id', async (req, res) => {
-  try {
+router.put('/:id', asyncHandler(async (req, res) => {
     const { error, value } = updateTaskSchema.validate(req.body);
     if (error) {
       return res.status(400).json({
@@ -212,7 +187,7 @@ router.put('/:id', async (req, res) => {
 
     params.push(req.params.id);
     const { rows } = await pool.query(`
-      UPDATE tasks 
+      UPDATE tasks
       SET ${updateFields.join(', ')}, updated_at = NOW()
       WHERE id = $${paramCount}
       RETURNING *
@@ -229,22 +204,14 @@ router.put('/:id', async (req, res) => {
       success: true,
       data: rows[0],
     });
-  } catch (error) {
-    console.error('Update task error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
-  }
-});
+}));
 
 // @route   DELETE /api/tasks/:id
 // @desc    Delete task
 // @access  Private
-router.delete('/:id', async (req, res) => {
-  try {
+router.delete('/:id', asyncHandler(async (req, res) => {
     const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [req.params.id]);
-    
+
     if (rowCount === 0) {
       return res.status(404).json({
         success: false,
@@ -256,13 +223,6 @@ router.delete('/:id', async (req, res) => {
       success: true,
       message: 'Task deleted successfully',
     });
-  } catch (error) {
-    console.error('Delete task error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Server error',
-    });
-  }
-});
+}));
 
 export default router; 

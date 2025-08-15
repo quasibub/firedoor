@@ -29,7 +29,12 @@ A comprehensive web application for streamlining fire door inspections and remed
 
 3. Set up environment variables (see `.env.example` files in frontend and backend)
 
-4. Start development servers:
+4. Run database migrations:
+   ```bash
+   npm run migrate
+   ```
+
+5. Start development servers:
    ```bash
    npm run dev
    ```

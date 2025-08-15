@@ -29,6 +29,7 @@ import {
   Visibility as ViewIcon,
   Assessment as AssessmentIcon,
 } from '@mui/icons-material';
+import type { ChipProps } from '@mui/material';
 
 interface Report {
   id: string;
@@ -228,7 +229,7 @@ const Reports: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string): ChipProps['color'] => {
     switch (severity) {
       case 'critical':
         return 'error';
@@ -430,7 +431,7 @@ const Reports: React.FC = () => {
                         </Typography>
                         <Chip
                           label={finding.severity}
-                          color={getSeverityColor(finding.severity) as any}
+                          color={getSeverityColor(finding.severity)}
                           size="small"
                         />
                       </Box>

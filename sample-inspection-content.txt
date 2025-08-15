@@ -1,0 +1,27 @@
+FIRE DOOR INSPECTION REPORT
+
+Location: Main Building - Floor 1
+Inspector: John Smith
+Date: 15/01/2024
+
+Total doors inspected: 12
+Compliant doors: 10
+Non-compliant doors: 2
+Critical issues: 1
+
+ISSUES FOUND:
+
+Door FD-001: Hinge loose, requires immediate repair
+Fire door FD-002: Gap exceeds 4mm, needs adjustment
+Door FD-003: Missing door closer, critical safety issue
+
+Notes: Overall condition is good, but immediate attention needed for critical issues.
+
+ADDITIONAL FINDINGS:
+
+- Door FD-004: Minor paint damage, low priority
+- Fire door FD-005: Seal slightly worn, medium priority maintenance required
+- Door FD-006: Handle loose, high priority repair needed
+
+SUMMARY:
+The inspection revealed 3 critical issues that require immediate attention, 2 high priority repairs, and 1 medium priority maintenance task. The remaining 6 doors are in good condition and compliant with fire safety standards. 

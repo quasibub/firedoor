@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
@@ -26,7 +26,7 @@ const upload = multer({
 });
 
 // Upload photo for a task
-router.post('/:taskId', upload.single('photo'), async (req, res) => {
+router.post('/:taskId', upload.single('photo'), async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     const { photoType = 'completion', description = '' } = req.body;
@@ -94,7 +94,7 @@ router.post('/:taskId', upload.single('photo'), async (req, res) => {
 });
 
 // Get photos for a task
-router.get('/:taskId', async (req, res) => {
+router.get('/:taskId', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     
@@ -114,7 +114,7 @@ router.get('/:taskId', async (req, res) => {
 });
 
 // Delete a photo
-router.delete('/:photoId', async (req, res) => {
+router.delete('/:photoId', async (req: Request, res: Response) => {
   try {
     const { photoId } = req.params;
     

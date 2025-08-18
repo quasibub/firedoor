@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import pool from '../config/database';
 
@@ -11,7 +11,7 @@ const rejectTaskSchema = Joi.object({
 });
 
 // Reject a task
-router.post('/:taskId', async (req, res) => {
+router.post('/:taskId', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     console.log('Reject task request:', { taskId, body: req.body });
@@ -86,7 +86,7 @@ router.post('/:taskId', async (req, res) => {
 });
 
 // Get rejection for a task
-router.get('/:taskId', async (req, res) => {
+router.get('/:taskId', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     
@@ -111,7 +111,7 @@ router.get('/:taskId', async (req, res) => {
 });
 
 // Resolve a rejection (admin only)
-router.put('/:taskId/resolve', async (req, res) => {
+router.put('/:taskId/resolve', async (req: Request, res: Response) => {
   try {
     const { taskId } = req.params;
     const { new_status = 'pending' } = req.body;

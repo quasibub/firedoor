@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../config/database';
 import Joi from 'joi';
 import bcrypt from 'bcryptjs';
@@ -21,7 +21,7 @@ const updateUserSchema = Joi.object({
 });
 
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { rows } = await pool.query(
       'SELECT id, name, email, role, created_at, updated_at FROM users ORDER BY created_at DESC'
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get user by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { rows } = await pool.query(
@@ -70,7 +70,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new user
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { error, value } = createUserSchema.validate(req.body);
     if (error) {
@@ -114,7 +114,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update user
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { error, value } = updateUserSchema.validate(req.body);
@@ -205,7 +205,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 

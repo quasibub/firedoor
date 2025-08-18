@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Joi from 'joi';
 
 const router = express.Router();
@@ -89,7 +89,7 @@ const generateReportSchema = Joi.object({
 // @route   GET /api/reports
 // @desc    Get all reports
 // @access  Private
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { type, status, inspectionId, page = 1, limit = 10 } = req.query;
     
@@ -140,7 +140,7 @@ router.get('/', async (req, res) => {
 // @route   GET /api/reports/:id
 // @desc    Get report by ID
 // @access  Private
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const report = mockReports.find(r => r.id === req.params.id);
     
@@ -167,7 +167,7 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/reports/generate
 // @desc    Generate new report
 // @access  Private
-router.post('/generate', async (req, res) => {
+router.post('/generate', async (req: Request, res: Response) => {
   try {
     const { error, value } = generateReportSchema.validate(req.body);
     if (error) {
@@ -230,7 +230,7 @@ router.post('/generate', async (req, res) => {
 // @route   GET /api/reports/:id/download
 // @desc    Download report file
 // @access  Private
-router.get('/:id/download', async (req, res) => {
+router.get('/:id/download', async (req: Request, res: Response) => {
   try {
     const report = mockReports.find(r => r.id === req.params.id);
     
@@ -270,7 +270,7 @@ router.get('/:id/download', async (req, res) => {
 // @route   DELETE /api/reports/:id
 // @desc    Delete report
 // @access  Private
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const reportIndex = mockReports.findIndex(r => r.id === req.params.id);
     

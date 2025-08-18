@@ -379,319 +379,276 @@ PRIORITY BREAKDOWN
   };
 
   const exportAsPDF = async () => {
-    if (!report) return;
-    
     const doc = new jsPDF();
     let yPosition = 20;
-    
+
+    // Helper function to safely update yPosition
+    const updateYPosition = (increment: number) => {
+      yPosition += increment;
+      return yPosition;
+    };
+
+    // Helper function to check and handle page breaks
+    const checkPageBreak = (requiredSpace: number) => {
+      if (yPosition + requiredSpace > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    };
+
+    // Helper function to add text safely
+    const addText = (text: string, x: number, y: number, fontSize: number = 11, fontStyle: string = 'normal') => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', fontStyle);
+      doc.text(text, x, y);
+    };
+
     // Title
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FIRE DOOR REMEDIATION REPORT', 105, yPosition, { align: 'center' });
-    yPosition += 15;
+    addText('FIRE DOOR REMEDIATION REPORT', 105, yPosition, 16, 'bold');
+    yPosition = updateYPosition(15);
     
-    // Generated date
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Generated: ${new Date(report.generatedAt).toLocaleString()}`, 105, yPosition, { align: 'center' });
-    yPosition += 20;
-    
+    // Date
+    addText(`Generated: ${new Date(report.generatedAt).toLocaleString()}`, 105, yPosition, 10);
+    yPosition = updateYPosition(20);
+
     // Summary Statistics
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SUMMARY STATISTICS', 20, yPosition);
-    yPosition += 10;
+    addText('SUMMARY STATISTICS', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(10);
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Total Tasks: ${report.summary.totalTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Completed Tasks: ${report.summary.completedTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Pending Tasks: ${report.summary.pendingTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`In Progress Tasks: ${report.summary.inProgressTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Rejected Tasks: ${report.summary.rejectedTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Cancelled Tasks: ${report.summary.cancelledTasks}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Overall Completion Rate: ${report.summary.completionRate}%`, 20, yPosition);
-    yPosition += 15;
+    addText(`Total Tasks: ${report.summary.totalTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Completed Tasks: ${report.summary.completedTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Pending Tasks: ${report.summary.pendingTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`In Progress Tasks: ${report.summary.inProgressTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Rejected Tasks: ${report.summary.rejectedTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Cancelled Tasks: ${report.summary.cancelledTasks}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Overall Completion Rate: ${report.summary.completionRate}%`, 20, yPosition);
+    yPosition = updateYPosition(15);
+
+    // Priority Breakdown
+    addText('PRIORITY BREAKDOWN', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(10);
     
-    // Priority Breakdown Table
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PRIORITY BREAKDOWN', 20, yPosition);
-    yPosition += 10;
+    const priorityData = [
+      ['Priority', 'Total', 'Completed', 'Pending', 'In Progress', 'Rejected'],
+      ['Critical', report.priorityBreakdown.critical.total, report.priorityBreakdown.critical.completed, report.priorityBreakdown.critical.pending, report.priorityBreakdown.critical.inProgress, report.priorityBreakdown.critical.rejected],
+      ['High', report.priorityBreakdown.high.total, report.priorityBreakdown.high.completed, report.priorityBreakdown.high.pending, report.priorityBreakdown.high.inProgress, report.priorityBreakdown.high.rejected],
+      ['Medium', report.priorityBreakdown.medium.total, report.priorityBreakdown.medium.completed, report.priorityBreakdown.medium.pending, report.priorityBreakdown.medium.inProgress, report.priorityBreakdown.medium.rejected],
+      ['Low', report.priorityBreakdown.low.total, report.priorityBreakdown.low.completed, report.priorityBreakdown.low.pending, report.priorityBreakdown.low.inProgress, report.priorityBreakdown.low.rejected]
+    ];
+
+    doc.autoTable({
+      head: [priorityData[0]],
+      body: priorityData.slice(1),
+      startY: yPosition,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 8 }
+    });
     
-    const priorityData = Object.entries(report.priorityBreakdown).map(([priority, stats]) => [
-      priority.toUpperCase(),
-      stats.total.toString(),
-      stats.completed.toString(),
-      stats.pending.toString(),
-      stats.inProgress.toString(),
-      stats.rejected.toString()
-    ]);
+    yPosition = (doc as any).lastAutoTable.finalY + 15;
+
+    // Category Performance
+    addText('CATEGORY PERFORMANCE', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(10);
     
-         autoTable(doc, {
-       startY: yPosition,
-       head: [['Priority', 'Total', 'Completed', 'Pending', 'In Progress', 'Rejected']],
-       body: priorityData,
-       theme: 'grid',
-       headStyles: { fillColor: [41, 128, 185] },
-       styles: { fontSize: 9 }
-     });
-     
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
+    const categoryData = [
+      ['Category', 'Total', 'Completed', 'Rate %'],
+      ...report.categoryStats.map(cat => [cat.category, cat.total, cat.completed, cat.completionRate])
+    ];
+
+    doc.autoTable({
+      head: [categoryData[0]],
+      body: categoryData.slice(1),
+      startY: yPosition,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 8 }
+    });
     
-    // Category Performance Table
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CATEGORY PERFORMANCE', 20, yPosition);
-    yPosition += 10;
+    yPosition = (doc as any).lastAutoTable.finalY + 15;
+
+    // Location Performance
+    addText('LOCATION PERFORMANCE', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(10);
     
-    const categoryData = report.categoryStats.map(stat => [
-      stat.category,
-      stat.total.toString(),
-      stat.completed.toString(),
-      `${stat.completionRate}%`
-    ]);
+    const locationData = [
+      ['Location', 'Total', 'Completed', 'Rate %'],
+      ...report.locationStats.map(loc => [loc.location, loc.total, loc.completed, loc.completionRate])
+    ];
+
+    doc.autoTable({
+      head: [locationData[0]],
+      body: locationData.slice(1),
+      startY: yPosition,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185] },
+      styles: { fontSize: 8 }
+    });
     
-         autoTable(doc, {
-       startY: yPosition,
-       head: [['Category', 'Total', 'Completed', 'Completion Rate']],
-       body: categoryData,
-       theme: 'grid',
-       headStyles: { fillColor: [41, 128, 185] },
-       styles: { fontSize: 9 }
-     });
-     
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
-    
-    // Location Performance Table
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LOCATION PERFORMANCE', 20, yPosition);
-    yPosition += 10;
-    
-    const locationData = report.locationStats.map(stat => [
-      stat.location,
-      stat.total.toString(),
-      stat.completed.toString(),
-      `${stat.completionRate}%`
-    ]);
-    
-         autoTable(doc, {
-       startY: yPosition,
-       head: [['Location', 'Total', 'Completed', 'Completion Rate']],
-       body: locationData,
-       theme: 'grid',
-       headStyles: { fillColor: [41, 128, 185] },
-       styles: { fontSize: 9 }
-     });
-     
-     yPosition = (doc as any).lastAutoTable.finalY + 15;
-    
+    yPosition = (doc as any).lastAutoTable.finalY + 15;
+
     // Recent Activity
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RECENT ACTIVITY (Last 30 Days)', 20, yPosition);
-    yPosition += 10;
+    addText('RECENT ACTIVITY (Last 30 Days)', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(10);
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Completions: ${report.recentActivity.completions}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Photos Uploaded: ${report.recentActivity.photos}`, 20, yPosition);
-    yPosition += 6;
-    doc.text(`Rejections: ${report.recentActivity.rejections}`, 20, yPosition);
-    yPosition += 15;
-    
-         // Task Details with Photos
-     doc.setFontSize(14);
-     doc.setFont('helvetica', 'bold');
-     doc.text('TASK DETAILS WITH PHOTOS', 20, yPosition);
-     yPosition += 15;
-     
-     // Process each task individually to include photos
-     for (let i = 0; i < filteredTasks.length; i++) {
-       const task = filteredTasks[i];
-       
-       // Check if we need a new page
-       if (yPosition > 250) {
-         doc.addPage();
-         yPosition = 20;
-       }
-       
-       // Task header
-       doc.setFontSize(12);
-       doc.setFont('helvetica', 'bold');
-       doc.text(`${i + 1}. ${task.title}`, 20, yPosition);
-       yPosition += 8;
-       
-       // Task details
-       doc.setFontSize(10);
-       doc.setFont('helvetica', 'normal');
-       doc.text(`Door ID: ${task.door_id}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Location: ${task.location}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Priority: ${task.priority}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Status: ${task.status}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Assigned To: ${task.assigned_to}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Category: ${task.category}`, 20, yPosition);
-       yPosition += 6;
-       doc.text(`Created: ${new Date(task.created_at).toLocaleDateString()}`, 20, yPosition);
-       yPosition += 6;
-       if (task.completed_at) {
-         doc.text(`Completed: ${new Date(task.completed_at).toLocaleDateString()}`, 20, yPosition);
-         yPosition += 6;
-       }
-       
-       // Task description
-       if (task.description) {
-         yPosition += 3;
-         doc.text(`Description: ${task.description}`, 20, yPosition);
-         yPosition += 8;
-       }
-       
-       // Photos section
-       if (task.photos && task.photos.length > 0) {
-         yPosition += 3;
-         doc.setFontSize(11);
-         doc.setFont('helvetica', 'bold');
-         doc.text(`Photos (${task.photos.length}):`, 20, yPosition);
-         yPosition += 8;
-         
-                    // Add photos to the PDF
-           for (let j = 0; j < task.photos.length; j++) {
-             const photo = task.photos[j];
-             
-             try {
-               // Load the image from the server
-               const imageUrl = `http://localhost:5000${photo.photo_url}`;
-               
-               // Fetch the image as blob
-               const response = await fetch(imageUrl);
-               const blob = await response.blob();
-               
-               // Convert blob to base64
-               const reader = new FileReader();
-               const base64Promise = new Promise((resolve) => {
-                 reader.onload = () => resolve(reader.result);
-                 reader.readAsDataURL(blob);
-               });
-               const base64 = await base64Promise as string;
-               
-               // Add photo details
-               doc.setFontSize(9);
-               doc.setFont('helvetica', 'normal');
-               doc.text(`Photo ${j + 1}: ${photo.description || 'No description'}`, 25, yPosition);
-               yPosition += 6;
-               doc.text(`Uploaded: ${new Date(photo.created_at).toLocaleDateString()}`, 25, yPosition);
-               yPosition += 8;
-               
-               // Add the actual image to PDF
-               try {
-                 const img = new Image();
-                 img.src = base64;
-                 
-                 await new Promise((resolve) => {
-                   img.onload = () => {
-                     // Calculate image dimensions to fit in PDF
-                     const maxWidth = 160; // mm
-                     const maxHeight = 80; // mm
-                     
-                     let imgWidth = img.width;
-                     let imgHeight = img.height;
-                     
-                     // Scale down if too large
-                     if (imgWidth > maxWidth) {
-                       const ratio = maxWidth / imgWidth;
-                       imgWidth = maxWidth;
-                       imgHeight = imgHeight * ratio;
-                     }
-                     
-                     if (imgHeight > maxHeight) {
-                       const ratio = maxHeight / imgHeight;
-                       imgHeight = maxHeight;
-                       imgWidth = imgWidth * ratio;
-                     }
-                     
-                     // Check if we need a new page for the image
-                     if (yPosition + imgHeight > 250) {
-                       doc.addPage();
-                       yPosition = 20;
-                     }
-                     
-                     // Add image to PDF
-                     doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
-                     yPosition += imgHeight + 5;
-                     resolve(true);
-                   };
-                   img.onerror = () => {
-                     // Fallback to placeholder if image fails to load
-                     doc.rect(25, yPosition, 50, 30);
-                     doc.text('Photo Placeholder', 30, yPosition + 15);
-                     yPosition += 35;
-                     resolve(true);
-                   };
-                 });
-                 
-               } catch (imgError) {
-                 // Fallback to placeholder
-                 doc.rect(25, yPosition, 50, 30);
-                 doc.text('Photo Placeholder', 30, yPosition + 15);
-                 yPosition += 35;
-               }
-               
-             } catch (error) {
-               doc.setFontSize(9);
-               doc.setFont('helvetica', 'normal');
-               doc.text(`Photo ${j + 1}: Error loading image`, 25, yPosition);
-               yPosition += 6;
-             }
-             
-             // Check if we need a new page
-             if (yPosition > 250) {
-               doc.addPage();
-               yPosition = 20;
-             }
-           }
-       }
-       
-       // Rejections section
-       if (task.rejections && task.rejections.length > 0) {
-         yPosition += 3;
-         doc.setFontSize(11);
-         doc.setFont('helvetica', 'bold');
-         doc.text(`Rejections (${task.rejections.length}):`, 20, yPosition);
-         yPosition += 8;
-         
-         task.rejections.forEach((rejection, index) => {
-           doc.setFontSize(9);
-           doc.setFont('helvetica', 'normal');
-           doc.text(`Rejection ${index + 1}: ${rejection.rejection_reason}`, 25, yPosition);
-           yPosition += 6;
-           if (rejection.alternative_suggestion) {
-             doc.text(`Suggestion: ${rejection.alternative_suggestion}`, 25, yPosition);
-             yPosition += 6;
-           }
-           yPosition += 3;
-         });
-       }
-       
-       yPosition += 10; // Space between tasks
-     }
-    
-    // Save the PDF
-    doc.save(`remediation-report-${new Date().toISOString().split('T')[0]}.pdf`);
-    handleExportMenuClose();
-  };
+    addText(`Completions: ${report.recentActivity.completions}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Photos Uploaded: ${report.recentActivity.photos}`, 20, yPosition);
+    yPosition = updateYPosition(6);
+    addText(`Rejections: ${report.recentActivity.rejections}`, 20, yPosition);
+    yPosition = updateYPosition(15);
+
+    // Task Details with Photos
+    addText('TASK DETAILS WITH PHOTOS', 20, yPosition, 12, 'bold');
+    yPosition = updateYPosition(15);
+
+    for (let i = 0; i < report.tasks.length; i++) {
+      const task = report.tasks[i];
+      
+      // Check if we need a new page for the task
+      checkPageBreak(100);
+      
+      addText(`${i + 1}. ${task.title}`, 20, yPosition, 11, 'bold');
+      yPosition = updateYPosition(8);
+      
+      addText(`Door ID: ${task.door_id}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Location: ${task.location}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Priority: ${task.priority}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Status: ${task.status}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Assigned To: ${task.assigned_to}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Category: ${task.category}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      addText(`Created: ${new Date(task.created_at).toLocaleDateString()}`, 20, yPosition);
+      yPosition = updateYPosition(6);
+      
+      if (task.completed_at) {
+        addText(`Completed: ${new Date(task.completed_at).toLocaleDateString()}`, 20, yPosition);
+        yPosition = updateYPosition(6);
+      }
+      
+      yPosition = updateYPosition(3);
+      addText(`Description: ${task.description}`, 20, yPosition);
+      yPosition = updateYPosition(8);
+      
+      yPosition = updateYPosition(3);
+      
+      // Photos section
+      if (task.photos && task.photos.length > 0) {
+        addText(`Photos (${task.photos.length}):`, 20, yPosition);
+        yPosition = updateYPosition(8);
+        
+        for (let j = 0; j < task.photos.length; j++) {
+          const photo = task.photos[j];
+          
+          try {
+            // Try to get the photo data
+            const photoResponse = await fetch(`http://localhost:5000/api/task-photos/${photo.id}`);
+            if (photoResponse.ok) {
+              const photoData = await photoResponse.json();
+              const base64 = photoData.data.photo_data;
+              
+              // Create a new Image object for each photo
+              const img = new Image();
+              img.src = base64;
+              
+              await new Promise((resolve) => {
+                const onLoad = () => {
+                  // Calculate image dimensions to fit in PDF
+                  const maxWidth = 160; // mm
+                  const maxHeight = 80; // mm
+                  
+                  let imgWidth = img.width;
+                  let imgHeight = img.height;
+                  
+                  // Scale down if too large
+                  if (imgWidth > maxWidth) {
+                    const ratio = maxWidth / imgWidth;
+                    imgWidth = maxWidth;
+                    imgHeight = imgHeight * ratio;
+                  }
+                  
+                  if (imgHeight > maxHeight) {
+                    const ratio = maxHeight / imgHeight;
+                    imgHeight = maxHeight;
+                    imgWidth = imgWidth * ratio;
+                  }
+                  
+                  // Check if we need a new page for the image
+                  checkPageBreak(imgHeight);
+                  
+                  // Add image to PDF
+                  doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
+                  yPosition = updateYPosition(imgHeight + 5);
+                  resolve(true);
+                };
+                
+                const onError = () => {
+                  // Fallback to placeholder if image fails to load
+                  doc.rect(25, yPosition, 50, 30);
+                  doc.text('Photo Placeholder', 30, yPosition + 15);
+                  yPosition = updateYPosition(35);
+                  resolve(true);
+                };
+                
+                img.onload = onLoad;
+                img.onerror = onError;
+              });
+              
+            } else {
+              // Fallback to placeholder
+              doc.rect(25, yPosition, 50, 30);
+              doc.text('Photo Placeholder', 30, yPosition + 15);
+              yPosition = updateYPosition(35);
+            }
+            
+          } catch (error) {
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Photo ${j + 1}: Error loading image`, 25, yPosition);
+            yPosition = updateYPosition(6);
+          }
+          
+          // Check if we need a new page
+          checkPageBreak(50);
+        }
+      }
+      
+      // Rejections section
+      if (task.rejections && task.rejections.length > 0) {
+        yPosition = updateYPosition(3);
+        addText(`Rejections (${task.rejections.length}):`, 20, yPosition, 11, 'bold');
+        yPosition = updateYPosition(8);
+        
+        for (let index = 0; index < task.rejections.length; index++) {
+          const rejection = task.rejections[index];
+          addText(`Rejection ${index + 1}: ${rejection.rejection_reason}`, 25, yPosition);
+          yPosition = updateYPosition(6);
+          if (rejection.alternative_suggestion) {
+            addText(`Suggestion: ${rejection.alternative_suggestion}`, 25, yPosition);
+            yPosition = updateYPosition(6);
+          }
+          yPosition = updateYPosition(3);
+        }
+      }
+      
+      yPosition = updateYPosition(10); // Space between tasks
+    }
+   
+   // Save the PDF
+   doc.save(`remediation-report-${new Date().toISOString().split('T')[0]}.pdf`);
+   handleExportMenuClose();
+ };
 
   if (loading) {
     return <Typography>Loading remediation report...</Typography>;

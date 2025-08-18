@@ -379,6 +379,8 @@ PRIORITY BREAKDOWN
   };
 
   const exportAsPDF = async () => {
+    if (!report) return;
+    
     const doc = new jsPDF();
     let yPosition = 20;
 

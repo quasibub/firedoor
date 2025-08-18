@@ -1,10 +1,9 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import Joi from 'joi';
 import pool from '../config/database';
+import blobStorageService from '../services/blobStorage';
 
 // Import pdf-parse with type assertion
 const pdfParse = require('pdf-parse') as (dataBuffer: Buffer) => Promise<{
@@ -22,23 +21,9 @@ const pdfParse = require('pdf-parse') as (dataBuffer: Buffer) => Promise<{
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
-
+// Configure multer for memory storage (no local filesystem)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // Store file in memory buffer
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
@@ -417,9 +402,23 @@ router.post('/', upload.single('pdf'), async (req, res) => {
       return res.status(400).json({ error: 'No PDF file uploaded' });
     }
 
-    // Read and parse the PDF
-    const dataBuffer = fs.readFileSync(req.file.path);
-    const pdfData = await pdfParse(dataBuffer);
+    // Ensure Azure Blob Storage container exists
+    await blobStorageService.ensureContainerExists();
+
+    // Upload PDF to Azure Blob Storage
+    const uploadResult = await blobStorageService.uploadFile(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      'pdfs'
+    );
+
+    if (!uploadResult.success) {
+      return res.status(500).json({ error: 'Failed to upload PDF to storage', details: uploadResult.error });
+    }
+
+    // Parse the PDF from memory buffer
+    const pdfData = await pdfParse(req.file.buffer);
 
     // Debug the extraction if needed
     if (process.env.DEBUG_PDF) {
@@ -490,12 +489,13 @@ router.post('/', upload.single('pdf'), async (req, res) => {
       savedTasks.push(savedTask);
     }
 
-    // Clean up the uploaded file
-    fs.unlinkSync(req.file.path);
+    // File is already in memory, no cleanup needed for local filesystem
 
     // Return the extracted data with enhanced summary
     return res.status(200).json({
       message: 'PDF processed successfully',
+      pdfUrl: uploadResult.url, // Azure Blob Storage URL
+      blobName: uploadResult.blobName, // For future reference
       inspection: savedInspection,
       tasks: savedTasks,
       summary: {
@@ -519,18 +519,7 @@ router.post('/', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     console.error('PDF processing error:', error);
     
-    // Clean up file if it exists
-    if (req.file && fs.existsSync(req.file.path)) {
-      // Ensure the file to be deleted is within the upload directory
-      const UPLOAD_DIR = path.resolve(__dirname, '../../uploads');
-      const filePath = path.resolve(req.file.path);
-      if (filePath.startsWith(UPLOAD_DIR + path.sep)) {
-        fs.unlinkSync(filePath);
-      } else {
-        console.warn('Attempted to delete file outside of upload directory:', filePath);
-      }
-    }
-    
+    // No local file cleanup needed - file is in memory
     return res.status(500).json({ 
       error: 'Failed to process PDF',
       details: error instanceof Error ? error.message : 'Unknown error'

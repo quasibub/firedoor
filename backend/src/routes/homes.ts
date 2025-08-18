@@ -80,7 +80,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ success: true, data: home });
   } catch (error) {
     console.error('Create home error:', error);
-    if (error.code === '23505') { // Unique constraint violation
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // Unique constraint violation
       return res.status(400).json({ success: false, error: 'Home name already exists' });
     }
     return res.status(500).json({ success: false, error: 'Failed to create home' });
@@ -129,8 +129,8 @@ router.put('/:id', async (req, res) => {
     return res.json({ success: true, data: home });
   } catch (error) {
     console.error('Update home error:', error);
-    if (error.code === '23505') { // Unique constraint violation
-      return res.status(400).json({ success: false, error: 'Home name already exists' });
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') { // Unique constraint violation
+      return res.status(400).json({ success: false, error: 'Failed to update home' });
     }
     return res.status(500).json({ success: false, error: 'Failed to update home' });
   }

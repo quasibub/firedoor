@@ -27,20 +27,79 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
-app.use(helmet());
+// Trust Azure's reverse proxy
+app.set('trust proxy', 1);
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
+// Security middleware - Production optimized
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(',').map(url => url.trim()) : []), process.env.FRONTEND_URL || ""].filter(Boolean) as string[],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : []
+    }
+  },
+  crossOriginEmbedderPolicy: false, // Relaxed for Azure compatibility
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow Azure resources
 }));
 
-// Rate limiting
+// CORS configuration - Production ready with domain locking
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      // Parse comma-separated FRONTEND_URLS or fall back to single FRONTEND_URL
+      ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(',').map(url => url.trim()) : []),
+      process.env.FRONTEND_URL, // Fallback for backward compatibility
+      'https://fire-door-frontend.azurestaticapps.net' // Default Azure domain
+    ].filter(Boolean) // Remove undefined values
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn(`🚫 CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400 // 24 hours
+}));
+
+// Rate limiting - Azure reverse proxy compatible
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Trust Azure's reverse proxy headers
+  // Note: trustProxy is set on the app level above
+  // Use X-Forwarded-For header for IP detection
+  keyGenerator: (req) => {
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip = req.ip;
+    const remoteAddr = req.connection.remoteAddress;
+    
+    if (typeof forwardedFor === 'string') return forwardedFor;
+    if (typeof ip === 'string') return ip;
+    if (typeof remoteAddr === 'string') return remoteAddr;
+    
+    return 'unknown';
+  },
+  // Skip rate limiting for health checks
+  skip: (req) => req.path === '/health'
 });
 app.use('/api/', limiter);
 
@@ -77,8 +136,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/remediation-reports', remediationReportRoutes);
 app.use('/api/homes', homeRoutes);
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Note: Files are now served from Azure Blob Storage, not local filesystem
 
 // 404 handler
 app.use(notFound);

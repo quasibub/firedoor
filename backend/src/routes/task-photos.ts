@@ -1,35 +1,20 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
+import blobStorageService from '../services/blobStorage';
 
 const router = express.Router();
 
-// Configure multer for photo uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads/task-photos');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${uuidv4()}-${Date.now()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
-
+// Configure multer for memory storage (no local filesystem)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(), // Store file in memory buffer
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop() || '');
     const mimetype = allowedTypes.test(file.mimetype);
     
     if (mimetype && extname) {
@@ -72,8 +57,23 @@ router.post('/:taskId', upload.single('photo'), async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // Save photo record to database
-    const photoUrl = `/uploads/task-photos/${req.file.filename}`;
+    // Ensure Azure Blob Storage container exists
+    await blobStorageService.ensureContainerExists();
+    
+    // Upload photo to Azure Blob Storage
+    const uploadResult = await blobStorageService.uploadFile(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      'task-photos'
+    );
+    
+    if (!uploadResult.success) {
+      return res.status(500).json({ error: 'Failed to upload photo to storage', details: uploadResult.error });
+    }
+    
+    // Save photo record to database with Azure Blob Storage URL
+    const photoUrl = uploadResult.url;
     const { rows: [photo] } = await pool.query(`
       INSERT INTO task_photos (task_id, photo_url, photo_type, uploaded_by, description)
       VALUES ($1, $2, $3, $4, $5)
@@ -128,10 +128,12 @@ router.delete('/:photoId', async (req, res) => {
       return res.status(404).json({ error: 'Photo not found' });
     }
     
-    // Delete file from filesystem
-    const filePath = path.join(__dirname, '../../uploads/task-photos', path.basename(photo.photo_url));
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Delete file from Azure Blob Storage
+    if (photo.photo_url && photo.photo_url.includes('blob.core.windows.net')) {
+      // Extract blob name from URL
+      const urlParts = photo.photo_url.split('/');
+      const blobName = urlParts.slice(-2).join('/'); // Get folder/filename
+      await blobStorageService.deleteFile(blobName);
     }
     
     // Delete from database

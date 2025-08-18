@@ -21,7 +21,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
-    "types": ["node"],
+    "types": ["node", "pg"],
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]
@@ -38,4 +38,4 @@
     "dist",
     "**/*.test.ts"
   ]
-} 
+}

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import pool from '../config/database';
 
@@ -25,7 +25,7 @@ const updateTaskSchema = Joi.object({
 // @route   GET /api/tasks
 // @desc    Get all tasks
 // @access  Private
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { status, priority, inspectionId, home_id, page = 1, limit = 10 } = req.query;
     
@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
 // @route   GET /api/tasks/:id
 // @desc    Get task by ID
 // @access  Private
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { rows } = await pool.query('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     
@@ -127,7 +127,7 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/tasks
 // @desc    Create new task
 // @access  Private
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { error, value } = createTaskSchema.validate(req.body);
     if (error) {
@@ -170,7 +170,7 @@ router.post('/', async (req, res) => {
 // @route   PUT /api/tasks/:id
 // @desc    Update task
 // @access  Private
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { error, value } = updateTaskSchema.validate(req.body);
     if (error) {
@@ -239,7 +239,7 @@ router.put('/:id', async (req, res) => {
 // @route   DELETE /api/tasks/:id
 // @desc    Delete task
 // @access  Private
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [req.params.id]);
     

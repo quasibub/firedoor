@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../config/database';
 
 const router = express.Router();
 
 // Get comprehensive remediation report
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     // Get all tasks with their details
     const tasksQuery = `
@@ -197,7 +197,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get remediation report for specific date range
-router.get('/date-range', async (req, res) => {
+router.get('/date-range', async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
     

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import Joi from 'joi';
@@ -396,7 +396,7 @@ function convertTasksToDatabaseFormat(tasks: ExtractedTask[], inspectionId: stri
 }
 
 // POST /api/pdf-upload - Upload and process PDF
-router.post('/', upload.single('pdf'), async (req, res) => {
+router.post('/', upload.single('pdf'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No PDF file uploaded' });
@@ -528,7 +528,7 @@ router.post('/', upload.single('pdf'), async (req, res) => {
 });
 
 // GET /api/pdf-upload/health - Health check for PDF processing
-router.get('/health', (req, res) => {
+router.get('/health', (req: Request, res: Response) => {
   return res.status(200).json({
     status: 'OK',
     message: 'PDF upload service is running',

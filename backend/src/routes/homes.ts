@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import pool from '../config/database';
 import Joi from 'joi';
 
@@ -22,7 +22,7 @@ const updateHomeSchema = Joi.object({
 });
 
 // GET /api/homes - Get all homes
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { rows: homes } = await pool.query(`
       SELECT * FROM homes 
@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/homes/:id - Get home by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
@@ -58,7 +58,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/homes - Create new home
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { error, value } = createHomeSchema.validate(req.body);
     if (error) {
@@ -88,7 +88,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/homes/:id - Update home
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { error, value } = updateHomeSchema.validate(req.body);
@@ -137,7 +137,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/homes/:id - Delete home
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     

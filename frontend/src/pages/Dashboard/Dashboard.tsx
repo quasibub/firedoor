@@ -185,7 +185,7 @@ const Dashboard: React.FC = () => {
           label={selectedHome.name}
           color="primary"
           variant="outlined"
-          size="large"
+          size="medium"
         />
       </Box>
 

@@ -160,15 +160,30 @@ app.use(errorHandler);
 // Start server
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-  
-  // Initialize database
+  console.log(`�� Health check: http://localhost:${PORT}/health`);
+  console.log(`�� API Base URL: http://localhost:${PORT}/api`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`);
+
+  // Initialize database with better error handling
   try {
+    console.log('🔄 Initializing database...');
     await initializeDatabase();
+    console.log('✅ Database initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize database:', error);
+    // Don't crash the app, just log the error
+    console.log('⚠️ Continuing without database initialization...');
   }
 });
 
-export default app; 
+// Add process error handlers
+process.on('uncaughtException', (error) => {
+  console.error('�� Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+export default app;

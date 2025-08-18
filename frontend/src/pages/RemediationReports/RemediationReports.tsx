@@ -415,6 +415,56 @@ PRIORITY BREAKDOWN
       doc.text(text, x, y);
     };
 
+    // Helper function to handle image loading (moved outside loop to avoid no-loop-func)
+    const handleImageInPDF = async (base64: string, currentYPosition: number): Promise<number> => {
+      return new Promise<number>((resolve) => {
+        const img = new Image();
+        img.src = base64;
+        
+        const handleImageLoad = () => {
+          // Calculate image dimensions to fit in PDF
+          const maxWidth = 160; // mm
+          const maxHeight = 80; // mm
+          
+          let imgWidth = img.width;
+          let imgHeight = img.height;
+          
+          // Scale down if too large
+          if (imgWidth > maxWidth) {
+            const ratio = maxWidth / imgWidth;
+            imgWidth = maxWidth;
+            imgHeight = imgHeight * ratio;
+          }
+          
+          if (imgHeight > maxHeight) {
+            const ratio = maxHeight / imgHeight;
+            imgHeight = maxHeight;
+            imgWidth = imgWidth * ratio;
+          }
+          
+          // Check if we need a new page for the image
+          if (currentYPosition + imgHeight > 250) {
+            doc.addPage();
+            currentYPosition = 20;
+          }
+          
+          // Add image to PDF
+          doc.addImage(base64, 'JPEG', 25, currentYPosition, imgWidth, imgHeight);
+          resolve(currentYPosition + imgHeight + 5);
+        };
+        
+        const handleImageError = () => {
+          // Fallback to placeholder if image fails to load
+          doc.rect(25, currentYPosition, 50, 30);
+          doc.text('Photo Placeholder', 30, currentYPosition + 15);
+          resolve(currentYPosition + 35);
+        };
+        
+        img.onload = handleImageLoad;
+        img.onerror = handleImageError;
+      });
+    };
+
     // Title
     addText('FIRE DOOR REMEDIATION REPORT', 105, yPosition, 16, 'bold');
     yPosition = updateYPosition(15);
@@ -570,52 +620,8 @@ PRIORITY BREAKDOWN
               const photoData = await photoResponse.json();
               const base64 = photoData.data.photo_data;
               
-              // Create a new Image object for each photo
-              const img = new Image();
-              img.src = base64;
-              
-              await new Promise((resolve) => {
-                const onLoad = () => {
-                  // Calculate image dimensions to fit in PDF
-                  const maxWidth = 160; // mm
-                  const maxHeight = 80; // mm
-                  
-                  let imgWidth = img.width;
-                  let imgHeight = img.height;
-                  
-                  // Scale down if too large
-                  if (imgWidth > maxWidth) {
-                    const ratio = maxWidth / imgWidth;
-                    imgWidth = maxWidth;
-                    imgHeight = imgHeight * ratio;
-                  }
-                  
-                  if (imgHeight > maxHeight) {
-                    const ratio = maxHeight / imgHeight;
-                    imgHeight = maxHeight;
-                    imgWidth = imgWidth * ratio;
-                  }
-                  
-                  // Check if we need a new page for the image
-                  checkPageBreak(imgHeight);
-                  
-                  // Add image to PDF
-                  doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
-                  yPosition = updateYPosition(imgHeight + 5);
-                  resolve(true);
-                };
-                
-                const onError = () => {
-                  // Fallback to placeholder if image fails to load
-                  doc.rect(25, yPosition, 50, 30);
-                  doc.text('Photo Placeholder', 30, yPosition + 15);
-                  yPosition = updateYPosition(35);
-                  resolve(true);
-                };
-                
-                img.onload = onLoad;
-                img.onerror = onError;
-              });
+              // Use helper function to handle image (no functions declared in loop)
+              yPosition = await handleImageInPDF(base64, yPosition);
               
             } else {
               // Fallback to placeholder

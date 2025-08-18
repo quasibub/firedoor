@@ -124,6 +124,19 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root route for Azure health checks
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Fire Door Inspection API is running',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      api: '/api'
+    }
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/inspections', inspectionRoutes);

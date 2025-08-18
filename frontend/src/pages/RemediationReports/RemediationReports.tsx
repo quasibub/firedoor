@@ -248,31 +248,36 @@ const RemediationReports: React.FC = () => {
     // Add priority breakdown
     csvRows.push(['Priority Breakdown']);
     csvRows.push(['Priority', 'Total', 'Completed', 'Pending', 'In Progress', 'Rejected']);
-    Object.entries(report.priorityBreakdown).forEach(([priority, stats]) => {
+    const priorityEntries = Object.entries(report.priorityBreakdown);
+    for (let i = 0; i < priorityEntries.length; i++) {
+      const [priority, stats] = priorityEntries[i];
       csvRows.push([priority, stats.total, stats.completed, stats.pending, stats.inProgress, stats.rejected]);
-    });
+    }
     csvRows.push(['']);
     
     // Add category stats
     csvRows.push(['Category Performance']);
     csvRows.push(['Category', 'Total', 'Completed', 'Completion Rate (%)']);
-    report.categoryStats.forEach(stat => {
+    for (let i = 0; i < report.categoryStats.length; i++) {
+      const stat = report.categoryStats[i];
       csvRows.push([stat.category, stat.total, stat.completed, stat.completionRate]);
-    });
+    }
     csvRows.push(['']);
     
     // Add location stats
     csvRows.push(['Location Performance']);
     csvRows.push(['Location', 'Total', 'Completed', 'Completion Rate (%)']);
-    report.locationStats.forEach(stat => {
+    for (let i = 0; i < report.locationStats.length; i++) {
+      const stat = report.locationStats[i];
       csvRows.push([stat.location, stat.total, stat.completed, stat.completionRate]);
-    });
+    }
     csvRows.push(['']);
     
     // Add task details
     csvRows.push(['Task Details']);
     csvRows.push(['Door ID', 'Location', 'Title', 'Priority', 'Status', 'Assigned To', 'Category', 'Created Date', 'Completed Date']);
-    filteredTasks.forEach(task => {
+    for (let i = 0; i < filteredTasks.length; i++) {
+      const task = filteredTasks[i];
       csvRows.push([
         task.door_id,
         task.location,
@@ -284,7 +289,7 @@ const RemediationReports: React.FC = () => {
         new Date(task.created_at).toLocaleDateString(),
         task.completed_at ? new Date(task.completed_at).toLocaleDateString() : ''
       ]);
-    });
+    }
     
     const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -321,21 +326,25 @@ PRIORITY BREAKDOWN
 ------------------
 `;
     
-    Object.entries(report.priorityBreakdown).forEach(([priority, stats]) => {
+    const priorityEntries = Object.entries(report.priorityBreakdown);
+    for (let i = 0; i < priorityEntries.length; i++) {
+      const [priority, stats] = priorityEntries[i];
       reportContent += `${priority.toUpperCase()}: ${stats.total} total, ${stats.completed} completed, ${stats.pending} pending, ${stats.inProgress} in progress, ${stats.rejected} rejected\n`;
-    });
+    }
     
     reportContent += `\nCATEGORY PERFORMANCE
 -------------------\n`;
-    report.categoryStats.forEach(stat => {
+    for (let i = 0; i < report.categoryStats.length; i++) {
+      const stat = report.categoryStats[i];
       reportContent += `${stat.category}: ${stat.total} total, ${stat.completed} completed (${stat.completionRate}%)\n`;
-    });
+    }
     
     reportContent += `\nLOCATION PERFORMANCE
 --------------------\n`;
-    report.locationStats.forEach(stat => {
+    for (let i = 0; i < report.locationStats.length; i++) {
+      const stat = report.locationStats[i];
       reportContent += `${stat.location}: ${stat.total} total, ${stat.completed} completed (${stat.completionRate}%)\n`;
-    });
+    }
     
     reportContent += `\nRECENT ACTIVITY (Last 30 Days)
 ---------------------------\n`;
@@ -345,8 +354,9 @@ PRIORITY BREAKDOWN
     
     reportContent += `\nTASK DETAILS
 ------------\n`;
-    filteredTasks.forEach((task, index) => {
-      reportContent += `${index + 1}. ${task.title}\n`;
+    for (let i = 0; i < filteredTasks.length; i++) {
+      const task = filteredTasks[i];
+      reportContent += `${i + 1}. ${task.title}\n`;
       reportContent += `   Door ID: ${task.door_id}\n`;
       reportContent += `   Location: ${task.location}\n`;
       reportContent += `   Priority: ${task.priority}\n`;
@@ -364,7 +374,7 @@ PRIORITY BREAKDOWN
         reportContent += `   Rejections: ${task.rejections.length}\n`;
       }
       reportContent += '\n';
-    });
+    }
     
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);

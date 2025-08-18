@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Paper,
   Chip,
-  Divider,
   List,
   ListItem,
   ListItemText,
@@ -19,7 +18,6 @@ import {
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
-  Description as FileIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
   Warning as WarningIcon,

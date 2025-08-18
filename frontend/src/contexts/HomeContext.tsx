@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 interface Home {
   id: string;
@@ -41,7 +41,7 @@ export const HomeProvider: React.FC<HomeProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHomes = async () => {
+  const fetchHomes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,15 +68,15 @@ export const HomeProvider: React.FC<HomeProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedHome]);
 
-  const refreshHomes = async () => {
+  const refreshHomes = useCallback(async () => {
     await fetchHomes();
-  };
+  }, [fetchHomes]);
 
   useEffect(() => {
     fetchHomes();
-  }, []);
+  }, [fetchHomes]);
 
   const value: HomeContextType = {
     selectedHome,

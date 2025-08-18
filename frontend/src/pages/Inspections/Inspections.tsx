@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PDFUploadDialog from '../../components/PDFUploadDialog/PDFUploadDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
@@ -16,10 +16,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
 } from '@mui/material';
 import {
@@ -49,7 +45,6 @@ const Inspections: React.FC = () => {
   const { user } = useAuth();
   const { selectedHome } = useHome();
   const isWorkman = user?.role === 'workman';
-  const isAdmin = user?.role === 'admin';
   
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +62,7 @@ const Inspections: React.FC = () => {
   });
 
   // Fetch inspections from API
-  const fetchInspections = async () => {
+  const fetchInspections = useCallback(async () => {
     try {
       setLoading(true);
       if (!selectedHome) {
@@ -91,11 +86,11 @@ const Inspections: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedHome]);
 
   useEffect(() => {
     fetchInspections();
-  }, [selectedHome]);
+  }, [fetchInspections]);
 
   const handleOpenDialog = (inspection?: Inspection) => {
     if (inspection) {

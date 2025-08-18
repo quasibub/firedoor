@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   FormControl,
@@ -6,8 +6,6 @@ import {
   MenuItem,
   Typography,
   Chip,
-  IconButton,
-  Tooltip,
   SelectChangeEvent,
 } from '@mui/material';
 import {
@@ -18,7 +16,6 @@ import { useHome } from '../../contexts/HomeContext';
 
 const HomeSelector: React.FC = () => {
   const { selectedHome, homes, loading, setSelectedHome } = useHome();
-  const [open, setOpen] = useState(false);
 
   const handleHomeChange = (event: SelectChangeEvent) => {
     const homeId = event.target.value as string;

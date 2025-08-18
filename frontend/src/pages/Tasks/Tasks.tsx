@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -54,7 +54,6 @@ const Tasks: React.FC = () => {
   const { user } = useAuth();
   const { selectedHome } = useHome();
   const isWorkman = user?.role === 'workman';
-  const isAdmin = user?.role === 'admin';
   
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +93,7 @@ const Tasks: React.FC = () => {
   });
 
   // Fetch tasks from API
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       if (!selectedHome) {
@@ -118,11 +117,11 @@ const Tasks: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedHome]);
 
   useEffect(() => {
     fetchTasks();
-  }, [selectedHome]);
+  }, [fetchTasks]);
 
   const handleOpenDialog = (task?: Task) => {
     if (task) {

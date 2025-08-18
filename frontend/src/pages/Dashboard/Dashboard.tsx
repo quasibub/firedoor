@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import {
   Assessment,
-  Task,
+  Task as TaskIcon,
   Warning,
   CheckCircle,
 } from '@mui/icons-material';
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
           <StatCard
             title="Pending Tasks"
             value={stats.pendingTasks}
-            icon={<Task />}
+            icon={<TaskIcon />}
             color="warning.main"
             subtitle={`${stats.overdueTasks} overdue`}
           />
@@ -297,4 +297,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

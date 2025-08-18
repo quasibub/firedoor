@@ -8,6 +8,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  SelectChangeEvent,
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -19,8 +20,8 @@ const HomeSelector: React.FC = () => {
   const { selectedHome, homes, loading, setSelectedHome } = useHome();
   const [open, setOpen] = useState(false);
 
-  const handleHomeChange = (event: any) => {
-    const homeId = event.target.value;
+  const handleHomeChange = (event: SelectChangeEvent) => {
+    const homeId = event.target.value as string;
     const home = homes.find(h => h.id === homeId);
     setSelectedHome(home || null);
   };

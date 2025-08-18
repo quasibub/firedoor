@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import pool from '../config/database';
 
@@ -22,7 +22,7 @@ const updateInspectionSchema = Joi.object({
 // @route   GET /api/inspections
 // @desc    Get all inspections
 // @access  Private
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { status, location, page = 1, limit = 10 } = req.query;
     
@@ -92,7 +92,7 @@ router.get('/', async (req, res) => {
 // @route   GET /api/inspections/:id
 // @desc    Get inspection by ID
 // @access  Private
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { rows } = await pool.query('SELECT * FROM inspections WHERE id = $1', [req.params.id]);
     
@@ -119,7 +119,7 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/inspections
 // @desc    Create new inspection
 // @access  Private
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { error, value } = createInspectionSchema.validate(req.body);
     if (error) {
@@ -161,7 +161,7 @@ router.post('/', async (req, res) => {
 // @route   PUT /api/inspections/:id
 // @desc    Update inspection
 // @access  Private
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { error, value } = updateInspectionSchema.validate(req.body);
     if (error) {
@@ -234,7 +234,7 @@ router.put('/:id', async (req, res) => {
 // @route   DELETE /api/inspections/:id
 // @desc    Delete inspection
 // @access  Private
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM inspections WHERE id = $1', [req.params.id]);
     

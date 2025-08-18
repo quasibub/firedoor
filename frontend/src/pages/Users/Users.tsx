@@ -34,6 +34,7 @@ import {
   Visibility as ViewIcon,
   VisibilityOff as ViewOffIcon,
 } from '@mui/icons-material';
+import API_ENDPOINTS from '../../config/api';
 
 interface User {
   id: string;
@@ -73,7 +74,7 @@ const Users: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/users');
+      const response = await fetch(API_ENDPOINTS.USERS);
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
@@ -131,7 +132,7 @@ const Users: React.FC = () => {
 
       if (editingUser) {
         // Update existing user
-        const response = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
+        const response = await fetch(API_ENDPOINTS.USER_BY_ID(editingUser.id), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ const Users: React.FC = () => {
         }
       } else {
         // Create new user
-        const response = await fetch('http://localhost:5000/api/users', {
+        const response = await fetch(API_ENDPOINTS.USERS, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -169,7 +170,7 @@ const Users: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`, {
+      const response = await fetch(API_ENDPOINTS.USER_BY_ID(id), {
         method: 'DELETE',
       });
       if (!response.ok) {

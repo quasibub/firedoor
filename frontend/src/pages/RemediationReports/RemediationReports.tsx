@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import API_ENDPOINTS from '../../config/api';
 import {
   Box,
   Typography,
@@ -124,7 +125,7 @@ const RemediationReports: React.FC = () => {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/remediation-reports');
+      const response = await fetch(API_ENDPOINTS.REMEDIATION_REPORTS);
       if (!response.ok) {
         throw new Error('Failed to fetch remediation report');
       }
@@ -615,7 +616,7 @@ PRIORITY BREAKDOWN
           
           try {
             // Try to get the photo data
-            const photoResponse = await fetch(`http://localhost:5000/api/task-photos/${photo.id}`);
+            const photoResponse = await fetch(API_ENDPOINTS.TASK_PHOTOS_BY_ID(photo.id));
             if (photoResponse.ok) {
               const photoData = await photoResponse.json();
               const base64 = photoData.data.photo_data;

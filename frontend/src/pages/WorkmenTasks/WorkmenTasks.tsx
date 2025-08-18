@@ -41,6 +41,7 @@ import {
   VisibilityOff
 } from '@mui/icons-material';
 import axios from 'axios';
+import API_ENDPOINTS from '../../config/api';
 
 interface Task {
   id: string;
@@ -112,7 +113,7 @@ const WorkmenTasks: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/tasks?assigned_to=current_user');
+      const response = await axios.get(`${API_ENDPOINTS.TASKS}?assigned_to=current_user`);
       setTasks(response.data.tasks || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -124,7 +125,7 @@ const WorkmenTasks: React.FC = () => {
 
   const fetchTaskPhotos = async (taskId: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/task-photos/${taskId}`);
+              const response = await axios.get(API_ENDPOINTS.TASK_PHOTOS_BY_ID(taskId));
       setTaskPhotos(response.data.photos || []);
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -133,7 +134,7 @@ const WorkmenTasks: React.FC = () => {
 
   const fetchTaskRejection = async (taskId: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/task-rejections/${taskId}`);
+              const response = await axios.get(API_ENDPOINTS.TASK_REJECTIONS_BY_ID(taskId));
       setTaskRejection(response.data.rejection);
     } catch (error) {
       // Task might not be rejected, so this is expected
@@ -165,7 +166,7 @@ const WorkmenTasks: React.FC = () => {
 
   const handleCompleteTask = async (taskId: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/tasks/${taskId}`, {
+              await axios.put(API_ENDPOINTS.TASK_BY_ID(taskId), {
         status: 'completed',
         completed_at: new Date().toISOString()
       });
@@ -185,7 +186,7 @@ const WorkmenTasks: React.FC = () => {
     formData.append('description', photoDescription);
 
     try {
-      await axios.post(`http://localhost:5000/api/task-photos/${selectedTask.id}`, formData, {
+              await axios.post(API_ENDPOINTS.TASK_PHOTOS_BY_ID(selectedTask.id), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -205,7 +206,7 @@ const WorkmenTasks: React.FC = () => {
     if (!selectedTask || !rejectionReason.trim()) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/task-rejections/${selectedTask.id}`, {
+              await axios.post(API_ENDPOINTS.TASK_REJECTIONS_BY_ID(selectedTask.id), {
         rejection_reason: rejectionReason,
         alternative_suggestion: alternativeSuggestion
       });
@@ -596,7 +597,7 @@ const WorkmenTasks: React.FC = () => {
                       <Grid item xs={6} sm={4} key={photo.id}>
                         <Card>
                           <img 
-                            src={`http://localhost:5000${photo.photo_url}`} 
+                            src={`${API_ENDPOINTS.TASK_PHOTOS_BY_ID(photo.id).replace('/api/task-photos/', '/api')}${photo.photo_url}`} 
                             alt={photo.description}
                             style={{ width: '100%', height: 150, objectFit: 'cover' }}
                           />

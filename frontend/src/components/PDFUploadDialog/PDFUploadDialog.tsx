@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
+import API_ENDPOINTS from '../../config/api';
 
 interface PDFUploadDialogProps {
   open: boolean;
@@ -71,7 +72,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      const response = await axios.post('http://localhost:5000/api/pdf-upload', formData, {
+      const response = await axios.post(API_ENDPOINTS.PDF_UPLOAD, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

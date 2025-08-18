@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import API_ENDPOINTS from '../config/api';
 
 interface Home {
   id: string;
@@ -46,7 +47,7 @@ export const HomeProvider: React.FC<HomeProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/homes');
+      const response = await fetch(API_ENDPOINTS.HOMES);
       if (!response.ok) {
         throw new Error('Failed to fetch homes');
       }

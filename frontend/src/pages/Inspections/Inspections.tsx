@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PDFUploadDialog from '../../components/PDFUploadDialog/PDFUploadDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import API_ENDPOINTS from '../../config/api';
 import {
   Box,
   Typography,
@@ -71,7 +72,7 @@ const Inspections: React.FC = () => {
       }
       
       // Request a larger limit to get more inspections
-      const response = await fetch(`http://localhost:5000/api/inspections?limit=100&home_id=${selectedHome.id}`);
+      const response = await fetch(`${API_ENDPOINTS.INSPECTIONS}?limit=100&home_id=${selectedHome.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch inspections');
       }
@@ -120,7 +121,7 @@ const Inspections: React.FC = () => {
     try {
       if (editingInspection) {
         // Update existing inspection
-        const response = await fetch(`http://localhost:5000/api/inspections/${editingInspection.id}`, {
+        const response = await fetch(API_ENDPOINTS.INSPECTION_BY_ID(editingInspection.id), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const Inspections: React.FC = () => {
         }
       } else {
         // Create new inspection
-        const response = await fetch('http://localhost:5000/api/inspections', {
+        const response = await fetch(API_ENDPOINTS.INSPECTIONS, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -160,7 +161,7 @@ const Inspections: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/inspections/${id}`, {
+      const response = await fetch(API_ENDPOINTS.INSPECTION_BY_ID(id), {
         method: 'DELETE',
       });
       if (!response.ok) {

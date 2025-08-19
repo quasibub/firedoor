@@ -49,6 +49,8 @@ jobs:
         cp backend/dist/middleware/*.js production-package/middleware/ || true
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
+        # Fix the start script to point to the correct main file
+        sed -i 's/"start": "node dist\/index.js"/"start": "node index.js"/' production-package/package.json
         # Copy essential non-JavaScript files
         cp backend/src/config/schema.sql production-package/config/
         # Remove ALL source files - Azure won't see TypeScript

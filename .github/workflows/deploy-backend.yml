@@ -36,11 +36,17 @@ jobs:
         cd backend
         npm run build
         cd ..
+        # Copy ONLY the compiled JavaScript and essential files
         cp -r backend/dist/* production-package/
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
-        # Remove uploads folder - photos are stored in Azure Blob Storage
+        # Remove ALL source files - Azure won't see TypeScript
+        rm -rf production-package/src || true
+        rm -rf production-package/tsconfig.json || true
         rm -rf production-package/uploads || true
+        # Remove Oryx config files that aren't working
+        rm -rf production-package/.oryxignore || true
+        rm -rf production-package/oryx-manifest.toml || true
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3

@@ -30,6 +30,7 @@ router.post('/:taskId', upload.single('photo'), async (req: Request, res: Respon
   try {
     const { taskId } = req.params;
     const { photoType = 'completion', description = '' } = req.body;
+    
     // Get user ID from auth middleware, or get the first available user
     let uploadedBy = (req as any).user?.id;
     
@@ -55,6 +56,18 @@ router.post('/:taskId', upload.single('photo'), async (req: Request, res: Respon
     
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
+    }
+    
+    // Check if task already has 5 photos
+    const { rows: existingPhotos } = await pool.query(
+      'SELECT COUNT(*) as photo_count FROM task_photos WHERE task_id = $1',
+      [taskId]
+    );
+    
+    if (parseInt(existingPhotos[0].photo_count) >= 5) {
+      return res.status(400).json({ 
+        error: 'Maximum of 5 photos allowed per task. Please delete some existing photos first.' 
+      });
     }
     
     // Ensure Azure Blob Storage container exists

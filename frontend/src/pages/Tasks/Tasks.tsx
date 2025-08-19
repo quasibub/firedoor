@@ -20,6 +20,8 @@ import {
   LinearProgress,
   Alert,
   Menu,
+  CircularProgress,
+  Divider,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -49,6 +51,17 @@ interface Task {
   completed_at: string | null;
   notes: string;
   category: string;
+}
+
+interface TaskFormData {
+  inspection_id: string;
+  door_id: string;
+  location: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  assigned_to: string;
+  notes: string;
 }
 
 const Tasks: React.FC = () => {
@@ -83,15 +96,20 @@ const Tasks: React.FC = () => {
     search: '',
   });
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormData>({
     inspection_id: '',
     door_id: '',
     location: '',
+    title: '',
     description: '',
-    priority: 'medium' as Task['priority'],
+    priority: 'medium',
     assigned_to: '',
-    notes: '',
+    notes: ''
   });
+
+  // Photo-related state
+  const [taskPhotos, setTaskPhotos] = useState<any[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   // Fetch tasks from API
   const fetchTasks = useCallback(async () => {
@@ -120,6 +138,22 @@ const Tasks: React.FC = () => {
     }
   }, [selectedHome]);
 
+  // Fetch photos for a specific task
+  const fetchTaskPhotos = async (taskId: string) => {
+    try {
+      setLoadingPhotos(true);
+      const response = await fetch(API_ENDPOINTS.TASK_PHOTOS_BY_ID(taskId));
+      if (response.ok) {
+        const data = await response.json();
+        setTaskPhotos(data.photos || []);
+      }
+    } catch (error) {
+      console.error('Error fetching task photos:', error);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
@@ -131,6 +165,7 @@ const Tasks: React.FC = () => {
         inspection_id: task.inspection_id,
         door_id: task.door_id,
         location: task.location,
+        title: task.title,
         description: task.description,
         priority: task.priority,
         assigned_to: task.assigned_to,
@@ -142,6 +177,7 @@ const Tasks: React.FC = () => {
         inspection_id: '',
         door_id: '',
         location: '',
+        title: '',
         description: '',
         priority: 'medium',
         assigned_to: '',
@@ -235,7 +271,7 @@ const Tasks: React.FC = () => {
         setTaskDetailDialogOpen(true);
         break;
       case 'photo':
-        setPhotoDialogOpen(true);
+        handleOpenPhotoDialog(task);
         break;
       case 'reject':
         setRejectionDialogOpen(true);
@@ -246,8 +282,15 @@ const Tasks: React.FC = () => {
     }
   };
 
+  // Handle photo upload
   const handlePhotoUpload = async () => {
     if (!photoFile || !selectedTask) return;
+
+    // Check if task already has 5 photos
+    if (taskPhotos.length >= 5) {
+      setError('Maximum of 5 photos allowed per task. Please delete some existing photos first.');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('photo', photoFile);
@@ -255,19 +298,54 @@ const Tasks: React.FC = () => {
     formData.append('description', photoDescription);
 
     try {
-      await axios.post(API_ENDPOINTS.TASK_PHOTOS_BY_ID(selectedTask.id), formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await fetch(API_ENDPOINTS.TASK_PHOTOS_BY_ID(selectedTask.id), {
+        method: 'POST',
+        body: formData,
       });
-      
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload photo');
+      }
+
+      // Refresh photos and close dialog
+      await fetchTaskPhotos(selectedTask.id);
       setPhotoDialogOpen(false);
       setPhotoFile(null);
       setPhotoDescription('');
+      setError(null);
     } catch (error) {
       console.error('Error uploading photo:', error);
-      setError('Failed to upload photo');
+      setError(error instanceof Error ? error.message : 'Failed to upload photo');
     }
+  };
+
+  // Handle photo deletion
+  const handleDeletePhoto = async (photoId: string) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.TASK_PHOTOS}/${photoId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh photos
+        if (selectedTask) {
+          await fetchTaskPhotos(selectedTask.id);
+        }
+      } else {
+        throw new Error('Failed to delete photo');
+      }
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      setError('Failed to delete photo');
+    }
+  };
+
+  // Open photo dialog
+  const handleOpenPhotoDialog = (task: Task) => {
+    setSelectedTask(task);
+    setPhotoDialogOpen(true);
+    fetchTaskPhotos(task.id);
   };
 
   const handleRejectTask = async () => {
@@ -357,6 +435,144 @@ const Tasks: React.FC = () => {
 
   // Get unique door IDs for the filter dropdown
   const uniqueDoorIds = Array.from(new Set(tasks.map(task => task.door_id))).sort();
+
+  // Update the photo dialog content
+  const renderPhotoDialog = () => (
+    <Dialog open={photoDialogOpen} onClose={() => setPhotoDialogOpen(false)} maxWidth="md" fullWidth>
+      <DialogTitle>Task Photos - {selectedTask?.title}</DialogTitle>
+      <DialogContent>
+        <Box display="flex" flexDirection="column" gap={2} mt={1}>
+          
+          {/* Existing Photos Section */}
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Existing Photos ({taskPhotos.length}/5)
+            </Typography>
+            {loadingPhotos ? (
+              <CircularProgress size={20} />
+            ) : taskPhotos.length > 0 ? (
+              <Grid container spacing={2}>
+                {taskPhotos.map((photo, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={photo.id}>
+                    <Box sx={{ position: 'relative', border: '1px solid #e0e0e0', borderRadius: 1, p: 1 }}>
+                      <img
+                        src={photo.photo_url}
+                        alt={`Photo ${index + 1}`}
+                        style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }}
+                      />
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" noWrap>
+                          {photo.description || 'No description'}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(photo.uploaded_at).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeletePhoto(photo.id)}
+                        sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(255,255,255,0.8)' }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Typography color="textSecondary">No photos uploaded yet</Typography>
+            )}
+          </Box>
+
+          {/* Upload New Photo Section */}
+          {taskPhotos.length < 5 && (
+            <>
+              <Divider />
+              <Typography variant="h6" gutterBottom>
+                Add New Photo
+              </Typography>
+              
+              {/* Camera Capture Button */}
+              <Button
+                variant="outlined"
+                startIcon={<PhotoCameraIcon />}
+                fullWidth
+                onClick={() => {
+                  // Create a camera input element
+                  const cameraInput = document.createElement('input');
+                  cameraInput.type = 'file';
+                  cameraInput.accept = 'image/*';
+                  cameraInput.capture = 'environment'; // Use back camera
+                  cameraInput.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      setPhotoFile(file);
+                    }
+                  };
+                  cameraInput.click();
+                }}
+              >
+                Take Photo with Camera
+              </Button>
+
+              {/* Gallery Selection Button */}
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<PhotoCameraIcon />}
+                fullWidth
+              >
+                Select Photo from Gallery
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                />
+              </Button>
+
+              {/* Photo Preview and Description */}
+              {photoFile && (
+                <>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <img
+                      src={URL.createObjectURL(photoFile)}
+                      alt="Preview"
+                      style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }}
+                    />
+                  </Box>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    value={photoDescription}
+                    onChange={(e) => setPhotoDescription(e.target.value)}
+                    multiline
+                    rows={3}
+                    placeholder="Describe what this photo shows..."
+                  />
+                </>
+              )}
+            </>
+          )}
+
+          {taskPhotos.length >= 5 && (
+            <Alert severity="info">
+              Maximum of 5 photos reached for this task. Delete some existing photos to add new ones.
+            </Alert>
+          )}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setPhotoDialogOpen(false)}>Close</Button>
+        {photoFile && taskPhotos.length < 5 && (
+          <Button onClick={handlePhotoUpload} variant="contained" color="primary">
+            Upload Photo
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
 
   return (
     <Box>
@@ -744,47 +960,6 @@ const Tasks: React.FC = () => {
         )}
       </Menu>
 
-      {/* Photo Upload Dialog */}
-      <Dialog open={photoDialogOpen} onClose={() => setPhotoDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Upload Photo</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} mt={1}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<PhotoCameraIcon />}
-              fullWidth
-            >
-              {photoFile ? photoFile.name : 'Select Photo'}
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-              />
-            </Button>
-            <TextField
-              fullWidth
-              label="Description"
-              value={photoDescription}
-              onChange={(e) => setPhotoDescription(e.target.value)}
-              multiline
-              rows={3}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPhotoDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={handlePhotoUpload} 
-            variant="contained" 
-            disabled={!photoFile}
-          >
-            Upload
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Rejection Dialog */}
       <Dialog open={rejectionDialogOpen} onClose={() => setRejectionDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Reject Task</DialogTitle>
@@ -862,8 +1037,11 @@ const Tasks: React.FC = () => {
           <Button onClick={() => setTaskDetailDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Add the photo dialog */}
+      {renderPhotoDialog()}
     </Box>
   );
-  };
-  
+};
+
 export default Tasks; 

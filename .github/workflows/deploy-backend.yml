@@ -30,9 +30,19 @@ jobs:
         cd backend
         npm run build
         
+    - name: Create production package
+      run: |
+        mkdir -p production-package
+        cd backend
+        npm run build
+        cd ..
+        cp -r backend/dist/* production-package/
+        cp backend/package.json production-package/
+        cp backend/package-lock.json production-package/ || true
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
         app-name: 'fire-door-backend'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: backend/
+        package: production-package/

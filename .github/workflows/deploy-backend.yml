@@ -30,19 +30,10 @@ jobs:
         cd backend
         npm run build
         
-    - name: Create Azure-ready package
-      run: |
-        mkdir -p azure-package
-        cd backend
-        npm run build
-        cd ..
-        cp -r backend/dist/* azure-package/
-        cp backend/package.json azure-package/
-        cp backend/package-lock.json azure-package/ || true
-        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
         app-name: 'fire-door-backend'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: azure-package/
+        package: backend/
+        startup-command: 'npm start'

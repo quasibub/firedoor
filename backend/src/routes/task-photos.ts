@@ -78,7 +78,7 @@ router.post('/:taskId', upload.single('photo'), async (req: Request, res: Respon
       req.file.buffer,
       req.file.originalname,
       req.file.mimetype,
-      'task-photos'
+      ''  // Remove extra folder to prevent duplicate paths
     );
     
     if (!uploadResult.success) {

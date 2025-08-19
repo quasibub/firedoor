@@ -29,19 +29,19 @@ router.post('/login', async (req: Request, res: Response) => {
     const { email, password } = value;
 
     // Find user in database
-    console.log(`🔍 Looking for user with email: ${email}`);
+    console.error(`🔍 Looking for user with email: ${email}`);
     const { rows } = await pool.query(
       'SELECT id, email, password_hash, name, role FROM users WHERE email = $1',
       [email]
     );
     
-    console.log(`📊 Query returned ${rows.length} rows`);
+    console.error(`📊 Query returned ${rows.length} rows`);
     if (rows.length > 0) {
-      console.log(`👤 User found: ${rows[0].email}, role: ${rows[0].role}`);
+      console.error(`👤 User found: ${rows[0].email}, role: ${rows[0].role}`);
     }
     
     if (rows.length === 0) {
-      console.log(`❌ No user found with email: ${email}`);
+      console.error(`❌ No user found with email: ${email}`);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
@@ -51,12 +51,12 @@ router.post('/login', async (req: Request, res: Response) => {
     const user = rows[0];
 
     // Check password
-    console.log(`🔐 Comparing password for user: ${user.email}`);
+    console.error(`🔐 Comparing password for user: ${user.email}`);
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    console.log(`🔑 Password match result: ${isMatch}`);
+    console.error(`🔑 Password match result: ${isMatch}`);
     
     if (!isMatch) {
-      console.log(`❌ Password mismatch for user: ${user.email}`);
+      console.error(`❌ Password mismatch for user: ${user.email}`);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',

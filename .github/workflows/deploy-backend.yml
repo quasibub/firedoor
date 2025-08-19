@@ -38,10 +38,15 @@ jobs:
         cd ..
         # Copy ONLY the compiled JavaScript files (no .d.ts or .d.ts.map)
         cp backend/dist/*.js production-package/
-        cp -r backend/dist/config production-package/
-        cp -r backend/dist/routes production-package/
-        cp -r backend/dist/services production-package/
-        cp -r backend/dist/middleware production-package/
+        # Copy only the JavaScript files from each folder, not the entire folders
+        mkdir -p production-package/config
+        cp backend/dist/config/*.js production-package/config/ || true
+        mkdir -p production-package/routes
+        cp backend/dist/routes/*.js production-package/routes/ || true
+        mkdir -p production-package/services
+        cp backend/dist/services/*.js production-package/services/ || true
+        mkdir -p production-package/middleware
+        cp backend/dist/middleware/*.js production-package/middleware/ || true
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
         # Copy essential non-JavaScript files
@@ -53,6 +58,15 @@ jobs:
         # Remove Oryx config files that aren't working
         rm -rf production-package/.oryxignore || true
         rm -rf production-package/oryx-manifest.toml || true
+        
+    - name: Debug package contents
+      run: |
+        echo "=== Production Package Contents ==="
+        ls -la production-package/
+        echo "=== Config folder contents ==="
+        ls -la production-package/config/
+        echo "=== Package size ==="
+        du -sh production-package/
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3

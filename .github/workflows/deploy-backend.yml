@@ -44,6 +44,8 @@ jobs:
         cp -r backend/dist/middleware production-package/
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
+        # Copy essential non-JavaScript files
+        cp backend/src/config/schema.sql production-package/config/
         # Remove ALL source files - Azure won't see TypeScript
         rm -rf production-package/src || true
         rm -rf production-package/tsconfig.json || true

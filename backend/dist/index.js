@@ -23,6 +23,7 @@ const users_1 = __importDefault(require("./routes/users"));
 const remediation_reports_1 = __importDefault(require("./routes/remediation-reports"));
 const homes_1 = __importDefault(require("./routes/homes"));
 const init_db_1 = __importDefault(require("./config/init-db"));
+console.error('🚨 DEBUG: SERVER STARTING WITH NEW CODE - COMMIT 5f7c77bca3 🚨');
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;

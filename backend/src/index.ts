@@ -21,6 +21,9 @@ import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
+// DEBUG: Test if Azure is running new code
+console.error('🚨 DEBUG: SERVER STARTING WITH NEW CODE - COMMIT 5f7c77bca3 🚨');
+
 // Load environment variables
 dotenv.config();
 

@@ -457,7 +457,7 @@ const Tasks: React.FC = () => {
                     <Box sx={{ position: 'relative', border: '1px solid #e0e0e0', borderRadius: 1, p: 1 }}>
                       <img
                         src={photo.photo_url}
-                        alt={`Photo ${index + 1}`}
+                        alt={`${index + 1}`}
                         style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }}
                       />
                       <Box sx={{ mt: 1 }}>

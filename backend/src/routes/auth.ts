@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import pool from '../config/database';
 
 const router = express.Router();
 
@@ -10,24 +11,6 @@ const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
-
-// Mock user data - in production this would come from database
-const mockUsers = [
-  {
-    id: '1',
-    email: 'inspector@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'John Inspector',
-    role: 'inspector',
-  },
-  {
-    id: '2',
-    email: 'admin@example.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    name: 'Admin User',
-    role: 'admin',
-  },
-];
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
@@ -45,17 +28,23 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const { email, password } = value;
 
-    // Find user
-    const user = mockUsers.find(u => u.email === email);
-    if (!user) {
+    // Find user in database
+    const { rows } = await pool.query(
+      'SELECT id, email, password_hash, name, role FROM users WHERE email = $1',
+      [email]
+    );
+    
+    if (rows.length === 0) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
       });
     }
 
+    const user = rows[0];
+
     // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -104,14 +93,21 @@ router.get('/me', async (req: Request, res: Response) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-    const user = mockUsers.find(u => u.id === decoded.userId);
+    
+    // Get user from database
+    const { rows } = await pool.query(
+      'SELECT id, email, name, role FROM users WHERE id = $1',
+      [decoded.userId]
+    );
 
-    if (!user) {
+    if (rows.length === 0) {
       return res.status(401).json({
         success: false,
         error: 'Token is not valid',
       });
     }
+
+    const user = rows[0];
 
     return res.json({
       success: true,

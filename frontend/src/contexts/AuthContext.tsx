@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import API_ENDPOINTS from '../config/api';
 
 interface User {
   id: string;
@@ -46,15 +47,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const validateToken = async (token: string) => {
     try {
-      // TODO: Implement actual token validation with backend
-      // For now, simulate a user - you can change the role here for testing
-      setUser({
-        id: '1',
-        email: 'admin@example.com',
-        name: 'Admin User',
-        role: 'admin' // Change this to 'admin', 'inspector', or 'workman' for testing
+      const response = await fetch(API_ENDPOINTS.AUTH_ME, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          localStorage.removeItem('authToken');
+        }
+      } else {
+        localStorage.removeItem('authToken');
+      }
     } catch (error) {
+      console.error('Token validation error:', error);
       localStorage.removeItem('authToken');
     } finally {
       setIsLoading(false);
@@ -64,18 +74,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // TODO: Implement actual login with backend
-      // For now, simulate successful login
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: 'Admin User',
-        role: 'admin'
-      };
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
       
-      localStorage.setItem('authToken', 'mock-token');
-      setUser(mockUser);
+      if (data.success) {
+        localStorage.setItem('authToken', data.token);
+        setUser(data.user);
+      } else {
+        throw new Error(data.error || 'Login failed');
+      }
     } catch (error) {
+      console.error('Login error:', error);
       throw new Error('Login failed');
     } finally {
       setIsLoading(false);

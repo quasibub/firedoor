@@ -51,9 +51,11 @@ jobs:
         cp backend/package-lock.json production-package/ || true
         # Fix the start script to point to the correct main file
         sed -i 's/"start": "node dist\/index.js"/"start": "node index.js"/' production-package/package.json
-        # Verify the change was made
-        echo "=== Updated package.json start script ==="
-        grep '"start"' production-package/package.json
+        # Remove the build script to prevent Azure from running tsc
+        sed -i 's/"build": "tsc"/"build": "echo \\"Build step skipped - pre-built JavaScript\\""/' production-package/package.json
+        # Verify the changes were made
+        echo "=== Updated package.json scripts ==="
+        grep -E '"start"|"build"' production-package/package.json
         # Copy essential non-JavaScript files
         cp backend/src/config/schema.sql production-package/config/
         # Remove ALL source files - Azure won't see TypeScript

@@ -51,6 +51,9 @@ jobs:
         cp backend/package-lock.json production-package/ || true
         # Fix the start script to point to the correct main file
         sed -i 's/"start": "node dist\/index.js"/"start": "node index.js"/' production-package/package.json
+        # Verify the change was made
+        echo "=== Updated package.json start script ==="
+        grep '"start"' production-package/package.json
         # Copy essential non-JavaScript files
         cp backend/src/config/schema.sql production-package/config/
         # Remove ALL source files - Azure won't see TypeScript
@@ -60,6 +63,11 @@ jobs:
         # Remove Oryx config files that aren't working
         rm -rf production-package/.oryxignore || true
         rm -rf production-package/oryx-manifest.toml || true
+        # Remove ALL TypeScript-related files that might trigger detection
+        find production-package -name "*.d.ts" -delete
+        find production-package -name "*.js.map" -delete
+        find production-package -name "*.ts" -delete
+        find production-package -name "*.tsx" -delete
         
     - name: Debug package contents
       run: |

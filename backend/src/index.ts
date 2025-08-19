@@ -22,7 +22,9 @@ import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
 // DEBUG: Test if Azure is running new code
-console.error('🚨 DEBUG: SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 🚨');
+console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
+console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
+console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
 
 // Load environment variables
 dotenv.config();

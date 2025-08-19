@@ -16,7 +16,9 @@ const loginSchema = Joi.object({
 // @desc    Authenticate user & get token
 // @access  Public
 router.post('/login', async (req: Request, res: Response) => {
-  console.error('DEBUG: Login route hit - testing deployment');
+  console.log('=== LOGIN ROUTE HIT ===');
+  console.log('=== LOGIN ROUTE HIT ===');
+  console.log('=== LOGIN ROUTE HIT ===');
   
   try {
     // Validate input

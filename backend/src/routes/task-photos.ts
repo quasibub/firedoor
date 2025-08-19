@@ -74,7 +74,7 @@ router.post('/:taskId', upload.single('photo'), async (req: Request, res: Respon
     await blobStorageService.ensureContainerExists();
     
     // Upload photo to Azure Blob Storage
-    // Force fresh deployment - fix duplicate folder paths
+    // Force fresh deployment - fix duplicate folder paths - V3
     // Another attempt to force package refresh
     const uploadResult = await blobStorageService.uploadFile(
       req.file.buffer,

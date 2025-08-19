@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'frontend/**'
+      - '!.github/workflows/azure-static-web-apps-gentle-stone-0433cff03.yml'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:

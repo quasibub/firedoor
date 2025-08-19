@@ -119,19 +119,19 @@ const Inspections: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      if (editingInspection) {
-        // Update existing inspection
-        const response = await fetch(API_ENDPOINTS.INSPECTION_BY_ID(editingInspection.id), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            location: formData.location,
-            totalDoors: parseInt(formData.total_doors),
-            notes: formData.notes,
-          }),
-        });
+              if (editingInspection) {
+          // Update existing inspection - ONLY send allowed fields
+          const response = await fetch(API_ENDPOINTS.INSPECTION_BY_ID(editingInspection.id), {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              // Only send the fields that can actually be updated
+              notes: formData.notes,
+              // Remove location and totalDoors - these shouldn't be updated in inspections
+            }),
+          });
         if (!response.ok) {
           throw new Error('Failed to update inspection');
         }

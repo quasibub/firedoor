@@ -44,7 +44,7 @@ class BlobStorageService {
     try {
       // Generate unique blob name
       const fileExtension = originalName.split('.').pop() || '';
-      const blobName = `${folder}/${uuidv4()}-${Date.now()}.${fileExtension}`;
+      const blobName = folder ? `${folder}/${uuidv4()}-${Date.now()}.${fileExtension}` : `${uuidv4()}-${Date.now()}.${fileExtension}`;
       
       // Get blob client
       const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);

@@ -1,0 +1,6 @@
+# Oryx manifest to skip build
+[build]
+skip = true
+
+[deploy]
+skip = true

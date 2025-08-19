@@ -1,0 +1,3 @@
+# Tell Azure Oryx to skip building this project
+# We pre-build in GitHub Actions
+*

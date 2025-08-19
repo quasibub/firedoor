@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import API_ENDPOINTS from '../../config/api';
 
 interface Home {
   id: string;
@@ -95,8 +96,8 @@ const Homes: React.FC = () => {
       }
 
       const url = editingHome 
-        ? `http://localhost:5000/api/homes/${editingHome.id}`
-        : 'http://localhost:5000/api/homes';
+        ? API_ENDPOINTS.HOME_BY_ID(editingHome.id)
+        : API_ENDPOINTS.HOMES;
       
       const method = editingHome ? 'PUT' : 'POST';
       
@@ -127,7 +128,7 @@ const Homes: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/homes/${id}`, {
+      const response = await fetch(API_ENDPOINTS.HOME_BY_ID(id), {
         method: 'DELETE',
       });
 

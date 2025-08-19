@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHome } from '../../contexts/HomeContext';
+import API_ENDPOINTS from '../../config/api';
 import axios from 'axios';
 
 interface Task {
@@ -54,7 +55,6 @@ const Tasks: React.FC = () => {
   const { user } = useAuth();
   const { selectedHome } = useHome();
   const isWorkman = user?.role === 'workman';
-  const isAdmin = user?.role === 'admin';
   
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +94,7 @@ const Tasks: React.FC = () => {
   });
 
   // Fetch tasks from API
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       if (!selectedHome) {
@@ -103,7 +103,7 @@ const Tasks: React.FC = () => {
       }
       
       // Request a larger limit to get more tasks (or all tasks)
-      const response = await fetch(`http://localhost:5000/api/tasks?limit=2000&home_id=${selectedHome.id}`);
+      const response = await fetch(`${API_ENDPOINTS.TASKS}?limit=2000&home_id=${selectedHome.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
@@ -118,11 +118,11 @@ const Tasks: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedHome]);
 
   useEffect(() => {
     fetchTasks();
-  }, [selectedHome]);
+  }, [fetchTasks]);
 
   const handleOpenDialog = (task?: Task) => {
     if (task) {
@@ -160,7 +160,7 @@ const Tasks: React.FC = () => {
     try {
       if (editingTask) {
         // Update existing task
-        const response = await fetch(`http://localhost:5000/api/tasks/${editingTask.id}`, {
+        const response = await fetch(API_ENDPOINTS.TASK_BY_ID(editingTask.id), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ const Tasks: React.FC = () => {
         }
       } else {
         // Create new task
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch(API_ENDPOINTS.TASKS, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ const Tasks: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+      const response = await fetch(API_ENDPOINTS.TASK_BY_ID(id), {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -206,7 +206,7 @@ const Tasks: React.FC = () => {
 
   const handleComplete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+      const response = await fetch(API_ENDPOINTS.TASK_BY_ID(id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ const Tasks: React.FC = () => {
     formData.append('description', photoDescription);
 
     try {
-      await axios.post(`http://localhost:5000/api/task-photos/${selectedTask.id}`, formData, {
+      await axios.post(API_ENDPOINTS.TASK_PHOTOS_BY_ID(selectedTask.id), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -274,7 +274,7 @@ const Tasks: React.FC = () => {
     if (!selectedTask || !rejectionReason.trim()) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/task-rejections/${selectedTask.id}`, {
+      await axios.post(API_ENDPOINTS.TASK_REJECTIONS_BY_ID(selectedTask.id), {
         rejection_reason: rejectionReason,
         alternative_suggestion: alternativeSuggestion
       });

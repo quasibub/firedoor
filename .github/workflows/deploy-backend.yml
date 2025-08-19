@@ -36,8 +36,12 @@ jobs:
         cd backend
         npm run build
         cd ..
-        # Copy ONLY the compiled JavaScript and essential files
-        cp -r backend/dist/* production-package/
+        # Copy ONLY the compiled JavaScript files (no .d.ts or .d.ts.map)
+        cp backend/dist/*.js production-package/
+        cp -r backend/dist/config production-package/
+        cp -r backend/dist/routes production-package/
+        cp -r backend/dist/services production-package/
+        cp -r backend/dist/middleware production-package/
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
         # Remove ALL source files - Azure won't see TypeScript

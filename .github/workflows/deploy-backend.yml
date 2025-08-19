@@ -39,6 +39,8 @@ jobs:
         cp -r backend/dist/* production-package/
         cp backend/package.json production-package/
         cp backend/package-lock.json production-package/ || true
+        # Remove uploads folder - photos are stored in Azure Blob Storage
+        rm -rf production-package/uploads || true
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3

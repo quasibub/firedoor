@@ -416,55 +416,7 @@ PRIORITY BREAKDOWN
       doc.text(text, x, y);
     };
 
-    // Helper function to handle image loading (moved outside loop to avoid no-loop-func)
-    const handleImageInPDF = async (base64: string, currentYPosition: number): Promise<number> => {
-      return new Promise<number>((resolve) => {
-        const img = new Image();
-        img.src = base64;
-        
-        const handleImageLoad = () => {
-          // Calculate image dimensions to fit in PDF
-          const maxWidth = 160; // mm
-          const maxHeight = 80; // mm
-          
-          let imgWidth = img.width;
-          let imgHeight = img.height;
-          
-          // Scale down if too large
-          if (imgWidth > maxWidth) {
-            const ratio = maxWidth / imgWidth;
-            imgWidth = maxWidth;
-            imgHeight = imgHeight * ratio;
-          }
-          
-          if (imgHeight > maxHeight) {
-            const ratio = maxHeight / imgHeight;
-            imgHeight = maxHeight;
-            imgWidth = imgWidth * ratio;
-          }
-          
-          // Check if we need a new page for the image
-          if (currentYPosition + imgHeight > 250) {
-            doc.addPage();
-            currentYPosition = 20;
-          }
-          
-          // Add image to PDF
-          doc.addImage(base64, 'JPEG', 25, currentYPosition, imgWidth, imgHeight);
-          resolve(currentYPosition + imgHeight + 5);
-        };
-        
-        const handleImageError = () => {
-          // Fallback to placeholder if image fails to load
-          doc.rect(25, currentYPosition, 50, 30);
-          doc.text('Photo Placeholder', 30, currentYPosition + 15);
-          resolve(currentYPosition + 35);
-        };
-        
-        img.onload = handleImageLoad;
-        img.onerror = handleImageError;
-      });
-    };
+
 
     // Title
     addText('FIRE DOOR REMEDIATION REPORT', 105, yPosition, 16, 'bold');
@@ -623,71 +575,83 @@ PRIORITY BREAKDOWN
             addText(`By: ${photo.uploaded_by_name || 'Unknown'}`, 25, yPosition);
             yPosition = updateYPosition(8);
             
-            // Try to embed the actual photo in the PDF
-            try {
-              // Convert blob URL to base64 for PDF embedding
-              const response = await fetch(photo.photo_url);
-              if (response.ok) {
-                const blob = await response.blob();
-                const reader = new FileReader();
-                
-                reader.onload = () => {
-                  const base64 = reader.result as string;
-                  
-                  // Calculate image dimensions to fit in PDF
-                  const maxWidth = 160; // mm
-                  const maxHeight = 80; // mm
-                  
-                  // Create a temporary image to get dimensions
-                  const img = new Image();
-                  img.onload = () => {
-                    let imgWidth = img.width;
-                    let imgHeight = img.height;
-                    
-                    // Scale down if too large
-                    if (imgWidth > maxWidth) {
-                      const ratio = maxWidth / imgWidth;
-                      imgWidth = maxWidth;
-                      imgHeight = imgHeight * ratio;
-                    }
-                    
-                    if (imgHeight > maxHeight) {
-                      const ratio = maxHeight / imgHeight;
-                      imgHeight = maxHeight;
-                      imgWidth = imgWidth * ratio;
-                    }
-                    
-                    // Check if we need a new page for the image
-                    if (yPosition + imgHeight > 250) {
-                      doc.addPage();
-                      yPosition = 20;
-                    }
-                    
-                    // Add image to PDF
-                    doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
-                    yPosition += imgHeight + 5;
-                  };
-                  
-                  img.src = base64;
-                };
-                
-                reader.readAsDataURL(blob);
-                
-                // Wait a bit for the image to process
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-              } else {
-                // Fallback to placeholder if image fetch fails
-                doc.rect(25, yPosition, 50, 30);
-                doc.text('Photo Unavailable', 30, yPosition + 15);
-                yPosition = updateYPosition(35);
-              }
-            } catch (imageError) {
-              // Fallback to placeholder if image processing fails
-              doc.rect(25, yPosition, 50, 30);
-              doc.text('Photo Error', 30, yPosition + 15);
-              yPosition = updateYPosition(35);
-            }
+                         // Try to embed the actual photo in the PDF
+             try {
+               // Convert blob URL to base64 for PDF embedding
+               const response = await fetch(photo.photo_url);
+               if (response.ok) {
+                 const blob = await response.blob();
+                 const reader = new FileReader();
+                 
+                 // Use a Promise to handle the async image processing
+                 const imageProcessed = new Promise<void>((resolveImage) => {
+                   reader.onload = () => {
+                     const base64 = reader.result as string;
+                      
+                     // Create a temporary image to get dimensions
+                     const img = new Image();
+                     img.onload = () => {
+                       let imgWidth = img.width;
+                       let imgHeight = img.height;
+                       
+                       // Calculate image dimensions to fit in PDF
+                       const maxWidth = 160; // mm
+                       const maxHeight = 80; // mm
+                       
+                       // Scale down if too large
+                       if (imgWidth > maxWidth) {
+                         const ratio = maxWidth / imgWidth;
+                         imgWidth = maxWidth;
+                         imgHeight = imgHeight * ratio;
+                       }
+                       
+                       if (imgHeight > maxHeight) {
+                         const ratio = maxHeight / imgHeight;
+                         imgHeight = maxHeight;
+                         imgWidth = imgWidth * ratio;
+                       }
+                       
+                       // Check if we need a new page for the image
+                       if (yPosition + imgHeight > 250) {
+                         doc.addPage();
+                         yPosition = 20;
+                       }
+                       
+                       // Add image to PDF
+                       doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
+                       yPosition += imgHeight + 5;
+                       resolveImage();
+                     };
+                     
+                     img.onerror = () => {
+                       // Fallback to placeholder if image fails to load
+                       doc.rect(25, yPosition, 50, 30);
+                       doc.text('Photo Error', 30, yPosition + 15);
+                       yPosition = updateYPosition(35);
+                       resolveImage();
+                     };
+                     
+                     img.src = base64;
+                   };
+                   
+                   reader.readAsDataURL(blob);
+                 });
+                 
+                 // Wait for the image to be processed
+                 await imageProcessed;
+                 
+               } else {
+                 // Fallback to placeholder if image fetch fails
+                 doc.rect(25, yPosition, 50, 30);
+                 doc.text('Photo Unavailable', 30, yPosition + 15);
+                 yPosition = updateYPosition(35);
+               }
+             } catch (imageError) {
+               // Fallback to placeholder if image processing fails
+               doc.rect(25, yPosition, 50, 30);
+               doc.text('Photo Error', 30, yPosition + 15);
+               yPosition = updateYPosition(35);
+             }
             
           } catch (error) {
             doc.setFontSize(9);

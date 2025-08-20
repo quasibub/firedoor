@@ -142,11 +142,26 @@ router.delete('/:photoId', async (req: Request, res: Response) => {
     }
     
     // Delete file from Azure Blob Storage
-    if (photo.photo_url && photo.photo_url.includes('blob.core.windows.net')) {
-      // Extract blob name from URL
-      const urlParts = photo.photo_url.split('/');
-      const blobName = urlParts.slice(-2).join('/'); // Get folder/filename
-      await blobStorageService.deleteFile(blobName);
+    // Only delete from Azure Blob Storage if the host matches allowed hosts
+    if (photo.photo_url) {
+      try {
+        const parsedUrl = new URL(photo.photo_url);
+        // Define allowed Azure Blob Storage hosts (add more if needed)
+        const allowedHosts = [
+          'blob.core.windows.net',
+          // If you use specific accounts, add e.g. 'myaccount.blob.core.windows.net'
+        ];
+        // Check if host ends with allowed host (to allow subdomains like <account>.blob.core.windows.net)
+        if (allowedHosts.some(allowedHost => parsedUrl.host === allowedHost || parsedUrl.host.endsWith('.' + allowedHost))) {
+          // Extract blob name from URL
+          const urlParts = parsedUrl.pathname.split('/').filter(Boolean);
+          const blobName = urlParts.slice(-2).join('/'); // Get folder/filename
+          await blobStorageService.deleteFile(blobName);
+        }
+      } catch (e) {
+        // Invalid URL, skip blob deletion
+        console.warn('Invalid photo_url, skipping blob deletion:', photo.photo_url);
+      }
     }
     
     // Delete from database

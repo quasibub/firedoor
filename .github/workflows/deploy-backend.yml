@@ -29,9 +29,20 @@ jobs:
         cd backend
         npm run build
         
+    - name: Prepare deployment package
+      run: |
+        mkdir -p deployment-package
+        cp backend/dist/*.js deployment-package/
+        cp backend/dist/config/*.js deployment-package/config/ || true
+        cp backend/dist/routes/*.js deployment-package/routes/ || true
+        cp backend/dist/services/*.js deployment-package/services/ || true
+        cp backend/dist/middleware/*.js deployment-package/middleware/ || true
+        cp backend/package.json deployment-package/
+        cp backend/src/config/schema.sql deployment-package/config/
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
         app-name: 'fire-door-backend'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: backend/
+        package: deployment-package/

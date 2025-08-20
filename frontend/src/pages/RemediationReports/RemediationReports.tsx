@@ -416,6 +416,77 @@ PRIORITY BREAKDOWN
       doc.text(text, x, y);
     };
 
+    // Helper function to process and embed a single photo
+    const processPhoto = async (photo: any, currentYPos: number): Promise<number> => {
+      try {
+        const response = await fetch(photo.photo_url);
+        if (response.ok) {
+          const blob = await response.blob();
+          const reader = new FileReader();
+          
+          return new Promise<number>((resolve) => {
+            reader.onload = () => {
+              const base64 = reader.result as string;
+              const img = new Image();
+              
+              img.onload = () => {
+                let imgWidth = img.width;
+                let imgHeight = img.height;
+                
+                // Calculate image dimensions to fit in PDF
+                const maxWidth = 160; // mm
+                const maxHeight = 80; // mm
+                
+                // Scale down if too large
+                if (imgWidth > maxWidth) {
+                  const ratio = maxWidth / imgWidth;
+                  imgWidth = maxWidth;
+                  imgHeight = imgHeight * ratio;
+                }
+                
+                if (imgHeight > maxHeight) {
+                  const ratio = maxHeight / imgHeight;
+                  imgHeight = maxHeight;
+                  imgWidth = imgWidth * ratio;
+                }
+                
+                // Check if we need a new page for the image
+                if (currentYPos + imgHeight > 250) {
+                  doc.addPage();
+                  currentYPos = 20;
+                }
+                
+                // Add image to PDF
+                doc.addImage(base64, 'JPEG', 25, currentYPos, imgWidth, imgHeight);
+                resolve(currentYPos + imgHeight + 5);
+              };
+              
+              img.onerror = () => {
+                // Fallback to placeholder if image fails to load
+                doc.rect(25, currentYPos, 50, 30);
+                doc.text('Photo Error', 30, currentYPos + 15);
+                resolve(currentYPos + 35);
+              };
+              
+              img.src = base64;
+            };
+            
+            reader.readAsDataURL(blob);
+          });
+        } else {
+          // Fallback to placeholder if image fetch fails
+          doc.rect(25, currentYPos, 50, 30);
+          doc.text('Photo Unavailable', 30, currentYPos + 15);
+          return currentYPos + 35;
+        }
+      } catch (imageError) {
+        // Fallback to placeholder if image processing fails
+        doc.rect(25, currentYPos, 50, 30);
+        doc.text('Photo Error', 30, currentYPos + 15);
+        return currentYPos + 35;
+      }
+    };
+
 
 
     // Title
@@ -575,84 +646,8 @@ PRIORITY BREAKDOWN
             addText(`By: ${photo.uploaded_by_name || 'Unknown'}`, 25, yPosition);
             yPosition = updateYPosition(8);
             
-                         // Try to embed the actual photo in the PDF
-             try {
-               // Convert blob URL to base64 for PDF embedding
-               const response = await fetch(photo.photo_url);
-               if (response.ok) {
-                 const blob = await response.blob();
-                 const reader = new FileReader();
-                 
-                 // Use a Promise to handle the async image processing
-                 const imageProcessed = new Promise<void>((resolveImage) => {
-                   reader.onload = () => {
-                     const base64 = reader.result as string;
-                      
-                     // Create a temporary image to get dimensions
-                     const img = new Image();
-                     
-                     img.onload = () => {
-                       let imgWidth = img.width;
-                       let imgHeight = img.height;
-                       
-                       // Calculate image dimensions to fit in PDF
-                       const maxWidth = 160; // mm
-                       const maxHeight = 80; // mm
-                       
-                       // Scale down if too large
-                       if (imgWidth > maxWidth) {
-                         const ratio = maxWidth / imgWidth;
-                         imgWidth = maxWidth;
-                         imgHeight = imgHeight * ratio;
-                       }
-                       
-                       if (imgHeight > maxHeight) {
-                         const ratio = maxHeight / imgHeight;
-                         imgHeight = maxHeight;
-                         imgWidth = imgWidth * ratio;
-                       }
-                       
-                       // Check if we need a new page for the image
-                       if (yPosition + imgHeight > 250) {
-                         doc.addPage();
-                         yPosition = 20;
-                       }
-                       
-                       // Add image to PDF
-                       doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
-                       yPosition += imgHeight + 5;
-                       resolveImage();
-                     };
-                     
-                     img.onerror = () => {
-                       // Fallback to placeholder if image fails to load
-                       doc.rect(25, yPosition, 50, 30);
-                       doc.text('Photo Error', 30, yPosition + 15);
-                       yPosition = updateYPosition(35);
-                       resolveImage();
-                     };
-                     
-                     img.src = base64;
-                   };
-                   
-                   reader.readAsDataURL(blob);
-                 });
-                 
-                 // Wait for the image to be processed
-                 await imageProcessed;
-                 
-               } else {
-                 // Fallback to placeholder if image fetch fails
-                 doc.rect(25, yPosition, 50, 30);
-                 doc.text('Photo Unavailable', 30, yPosition + 15);
-                 yPosition = updateYPosition(35);
-               }
-             } catch (imageError) {
-               // Fallback to placeholder if image processing fails
-               doc.rect(25, yPosition, 50, 30);
-               doc.text('Photo Error', 30, yPosition + 15);
-               yPosition = updateYPosition(35);
-             }
+             // Process and embed the photo using the helper function
+             yPosition = await processPhoto(photo, yPosition);
             
           } catch (error) {
             doc.setFontSize(9);

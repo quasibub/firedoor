@@ -585,16 +585,13 @@ PRIORITY BREAKDOWN
                  
                  // Use a Promise to handle the async image processing
                  const imageProcessed = new Promise<void>((resolveImage) => {
-                   // Capture current yPosition to avoid closure issues
-                   const currentYPosition = yPosition;
-                   
                    reader.onload = () => {
                      const base64 = reader.result as string;
                       
                      // Create a temporary image to get dimensions
                      const img = new Image();
                      
-                     const handleImageLoad = () => {
+                     img.onload = () => {
                        let imgWidth = img.width;
                        let imgHeight = img.height;
                        
@@ -627,7 +624,7 @@ PRIORITY BREAKDOWN
                        resolveImage();
                      };
                      
-                     const handleImageError = () => {
+                     img.onerror = () => {
                        // Fallback to placeholder if image fails to load
                        doc.rect(25, yPosition, 50, 30);
                        doc.text('Photo Error', 30, yPosition + 15);
@@ -635,8 +632,6 @@ PRIORITY BREAKDOWN
                        resolveImage();
                      };
                      
-                     img.onload = handleImageLoad;
-                     img.onerror = handleImageError;
                      img.src = base64;
                    };
                    

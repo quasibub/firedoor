@@ -146,6 +146,12 @@ psql "postgresql://postgres:<password>@fire-door-db.postgres.database.azure.com:
 cd backend
 npm run build
 
+# (Optional) install production dependencies using the lockfile
+npm ci --omit=dev
+
+# Create deployment archive with backend dist and lockfile
+zip -r dist.zip dist package.json package-lock.json
+
 # Deploy to Azure App Service
 az webapp deployment source config-zip \
   --resource-group fire-door-app-rg \

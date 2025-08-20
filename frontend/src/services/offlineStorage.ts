@@ -153,7 +153,7 @@ class OfflineStorageService {
     if (!this.db) throw new Error('Database not initialized');
     
     const items = await this.db.getAllFromIndex('syncQueue', 'by-timestamp');
-    return items.sort((a, b) => a.timestamp - b.timestamp);
+    return items.sort((a: SyncQueueItem, b: SyncQueueItem) => a.timestamp - b.timestamp);
   }
 
   // Get offline inspections

@@ -1,7 +1,7 @@
 import networkStatus from './networkStatus';
 import syncService from './syncService';
 import offlineStorage from './offlineStorage';
-import { OfflineTask, OfflineTaskPhoto, OfflineTaskRejection, OfflineReport, ApiResponse } from '../types/offline';
+import { OfflineTask, OfflineTaskPhoto, OfflineTaskRejection, OfflineReport, ApiResponse, NetworkStatus, SyncStatus } from '../types/offline';
 
 // Offline-aware API client
 class OfflineApiClient {
@@ -107,7 +107,7 @@ class OfflineApiClient {
   }
 
   // Get data from offline storage based on endpoint
-  private async getOfflineData(endpoint: string): Promise<any> {
+  private async getOfflineData(endpoint: string): Promise<ApiResponse> {
     try {
       if (endpoint.includes('/inspections')) {
         const inspections = await offlineStorage.getOfflineInspections();
@@ -133,7 +133,7 @@ class OfflineApiClient {
   }
 
   // Get combined report data from both online and offline sources
-  private async getCombinedReportData(): Promise<any> {
+  private async getCombinedReportData(): Promise<ApiResponse> {
     try {
       // Get offline data
       const offlineTasks = await offlineStorage.getOfflineTasks();
@@ -143,25 +143,25 @@ class OfflineApiClient {
       // Create a mock report structure from offline data
       const offlineReport = {
         generatedAt: new Date().toISOString(),
-        summary: {
-          totalTasks: offlineTasks.length,
-          completedTasks: offlineTasks.filter((t: any) => t.status === 'completed').length,
-          pendingTasks: offlineTasks.filter((t: any) => t.status === 'pending').length,
-          inProgressTasks: offlineTasks.filter((t: any) => t.status === 'in-progress').length,
-          rejectedTasks: offlineTasks.filter((t: any) => t.status === 'rejected').length,
-          cancelledTasks: offlineTasks.filter((t: any) => t.status === 'cancelled').length,
-          completionRate: offlineTasks.length > 0 
-            ? Math.round((offlineTasks.filter((t: any) => t.status === 'completed').length / offlineTasks.length) * 100)
-            : 0,
-        },
+                 summary: {
+           totalTasks: offlineTasks.length,
+           completedTasks: offlineTasks.filter((t: OfflineTask) => t.status === 'completed').length,
+           pendingTasks: offlineTasks.filter((t: OfflineTask) => t.status === 'pending').length,
+           inProgressTasks: offlineTasks.filter((t: OfflineTask) => t.status === 'in-progress').length,
+           rejectedTasks: offlineTasks.filter((t: OfflineTask) => t.status === 'rejected').length,
+           cancelledTasks: offlineTasks.filter((t: OfflineTask) => t.status === 'cancelled').length,
+           completionRate: offlineTasks.length > 0 
+             ? Math.round((offlineTasks.filter((t: OfflineTask) => t.status === 'completed').length / offlineTasks.length) * 100)
+             : 0,
+         },
         priorityBreakdown: this.calculatePriorityBreakdown(offlineTasks),
         categoryStats: this.calculateCategoryStats(offlineTasks),
         locationStats: this.calculateLocationStats(offlineTasks),
-        recentActivity: {
-          completions: offlineTasks.filter((t: any) => t.status === 'completed').length,
-          photos: offlinePhotos.length,
-          rejections: offlineRejections.length,
-        },
+                 recentActivity: {
+           completions: offlineTasks.filter((t: OfflineTask) => t.status === 'completed').length,
+           photos: offlinePhotos.length,
+           rejections: offlineRejections.length,
+         },
         tasks: offlineTasks,
         offline: true,
       };
@@ -259,7 +259,7 @@ class OfflineApiClient {
   }
 
   // Get sync status
-  async getSyncStatus(): Promise<any> {
+  async getSyncStatus(): Promise<SyncStatus> {
     return await syncService.getSyncStatus();
   }
 }

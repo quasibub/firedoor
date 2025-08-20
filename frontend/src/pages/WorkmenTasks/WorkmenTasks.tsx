@@ -301,7 +301,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.status}
                     label="Status"
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, status: e.target.value as Task['status'] })}
                   >
                     <MenuItem value="all">All Statuses</MenuItem>
                     <MenuItem value="pending">Pending</MenuItem>
@@ -318,7 +318,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.priority}
                     label="Priority"
-                    onChange={(e) => setFilters({ ...filters, priority: e.target.value as any })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, priority: e.target.value as Task['priority'] })}
                   >
                     <MenuItem value="all">All Priorities</MenuItem>
                     <MenuItem value="low">Low</MenuItem>
@@ -334,7 +334,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.doorId}
                     label="Door ID"
-                    onChange={(e) => setFilters({ ...filters, doorId: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, doorId: e.target.value })}
                   >
                     <MenuItem value="all">All Doors</MenuItem>
                     {uniqueDoorIds.map((doorId) => (
@@ -351,7 +351,7 @@ const WorkmenTasks: React.FC = () => {
                   size="small"
                   label="Search"
                   value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, search: e.target.value })}
                   placeholder="Search tasks..."
                 />
               </Grid>
@@ -400,12 +400,12 @@ const WorkmenTasks: React.FC = () => {
                       <Typography variant="h6">{task.title}</Typography>
                       <Chip 
                         label={task.priority} 
-                        color={getPriorityColor(task.priority) as any}
+                        color={getPriorityColor(task.priority)}
                         size="small"
                       />
                       <Chip 
                         label={task.status} 
-                        color={getStatusColor(task.status) as any}
+                        color={getStatusColor(task.status)}
                         size="small"
                       />
                     </Box>
@@ -489,14 +489,14 @@ const WorkmenTasks: React.FC = () => {
                 type="file"
                 hidden
                 accept="image/*"
-                onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhotoFile(e.target.files?.[0] || null)}
               />
             </Button>
             <TextField
               fullWidth
               label="Description"
               value={photoDescription}
-              onChange={(e) => setPhotoDescription(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhotoDescription(e.target.value)}
               multiline
               rows={3}
             />
@@ -523,7 +523,7 @@ const WorkmenTasks: React.FC = () => {
               fullWidth
               label="Rejection Reason *"
               value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRejectionReason(e.target.value)}
               multiline
               rows={4}
               required
@@ -532,7 +532,7 @@ const WorkmenTasks: React.FC = () => {
               fullWidth
               label="Alternative Suggestion (Optional)"
               value={alternativeSuggestion}
-              onChange={(e) => setAlternativeSuggestion(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAlternativeSuggestion(e.target.value)}
               multiline
               rows={3}
             />
@@ -569,8 +569,8 @@ const WorkmenTasks: React.FC = () => {
               <Typography variant="body1" paragraph>{selectedTask.description}</Typography>
               
               <Box display="flex" gap={1} mb={2}>
-                <Chip label={selectedTask.priority} color={getPriorityColor(selectedTask.priority) as any} />
-                <Chip label={selectedTask.status} color={getStatusColor(selectedTask.status) as any} />
+                <Chip label={selectedTask.priority} color={getPriorityColor(selectedTask.priority)} />
+                <Chip label={selectedTask.status} color={getStatusColor(selectedTask.status)} />
               </Box>
               
               <Typography variant="body2" color="textSecondary" gutterBottom>

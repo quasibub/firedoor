@@ -5,7 +5,7 @@ import { SyncStatus, NetworkStatus } from '../types/offline';
 // Sync service for handling offline/online data synchronization
 class SyncService {
   private isSyncing: boolean = false;
-  private syncInterval: NodeJS.Timeout | null = null;
+  private syncInterval: number | null = null;
   private maxRetries: number = 3;
   private retryDelay: number = 5000; // 5 seconds
 
@@ -80,7 +80,7 @@ class SyncService {
   }
 
   // Process a single sync item
-  private async processSyncItem(item: any): Promise<void> {
+  private async processSyncItem(item: SyncQueueItem): Promise<void> {
     const { type, endpoint, data } = item;
 
     try {
@@ -141,7 +141,7 @@ class SyncService {
   }
 
   // Update local storage after successful sync
-  private async updateLocalStorage(type: string, endpoint: string, data: any): Promise<void> {
+  private async updateLocalStorage(type: string, endpoint: string, data: Record<string, any>): Promise<void> {
     try {
       if (endpoint.includes('/inspections')) {
         if (type === 'CREATE' || type === 'UPDATE') {
@@ -166,7 +166,7 @@ class SyncService {
   }
 
   // Queue a request for later sync
-  async queueRequest(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: any): Promise<void> {
+  async queueRequest(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: Record<string, any>): Promise<void> {
     try {
       await offlineStorage.addToSyncQueue(type, endpoint, data);
       console.log(`📋 Request queued for sync: ${type} ${endpoint}`);

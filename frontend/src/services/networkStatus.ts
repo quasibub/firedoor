@@ -5,7 +5,7 @@ class NetworkStatusService {
   private isOnline: boolean = navigator.onLine;
   private connectionQuality: 'excellent' | 'good' | 'poor' | 'offline' = 'excellent';
   private listeners: Array<(status: NetworkStatus) => void> = [];
-  private pingInterval: NodeJS.Timeout | null = null;
+  private pingInterval: number | null = null;
   private lastPingTime: number = 0;
   private pingTimeout: number = 5000; // 5 seconds
 

@@ -7,5 +7,19 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html"
-  }
+  },
+  "headers": [
+    {
+      "route": "/sw.js",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "route": "/manifest.json",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    }
+  ]
 }

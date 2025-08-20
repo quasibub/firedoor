@@ -173,16 +173,21 @@ class OfflineApiClient {
   }
 
   // Calculate priority breakdown from offline tasks
-  private calculatePriorityBreakdown(tasks: any[]): any {
-    const breakdown = { critical: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
-                       high: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
-                       medium: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
-                       low: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 } };
+  private calculatePriorityBreakdown(tasks: any[]): Record<string, Record<string, number>> {
+    const breakdown: Record<string, Record<string, number>> = {
+      critical: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
+      high: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
+      medium: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
+      low: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 }
+    };
 
     tasks.forEach(task => {
-      if (breakdown[task.priority]) {
-        breakdown[task.priority].total++;
-        breakdown[task.priority][task.status]++;
+      const priority = task.priority as string;
+      const status = task.status as string;
+      
+      if (breakdown[priority] && breakdown[priority][status] !== undefined) {
+        breakdown[priority].total++;
+        breakdown[priority][status]++;
       }
     });
 
@@ -190,19 +195,22 @@ class OfflineApiClient {
   }
 
   // Calculate category stats from offline tasks
-  private calculateCategoryStats(tasks: any[]): any[] {
-    const categoryMap = new Map();
+  private calculateCategoryStats(tasks: any[]): Array<{ category: string; total: number; completed: number; completionRate: number }> {
+    const categoryMap = new Map<string, { total: number; completed: number }>();
     
     tasks.forEach(task => {
-      if (!categoryMap.has(task.category)) {
-        categoryMap.set(task.category, { total: 0, completed: 0 });
+      const category = task.category as string;
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, { total: 0, completed: 0 });
       }
-      const stats = categoryMap.get(task.category);
-      stats.total++;
-      if (task.status === 'completed') stats.completed++;
+      const stats = categoryMap.get(category);
+      if (stats) {
+        stats.total++;
+        if (task.status === 'completed') stats.completed++;
+      }
     });
 
-    return Array.from(categoryMap.entries()).map(([category, stats]: [string, any]) => ({
+    return Array.from(categoryMap.entries()).map(([category, stats]) => ({
       category,
       total: stats.total,
       completed: stats.completed,
@@ -211,19 +219,22 @@ class OfflineApiClient {
   }
 
   // Calculate location stats from offline tasks
-  private calculateLocationStats(tasks: any[]): any[] {
-    const locationMap = new Map();
+  private calculateLocationStats(tasks: any[]): Array<{ location: string; total: number; completed: number; completionRate: number }> {
+    const locationMap = new Map<string, { total: number; completed: number }>();
     
     tasks.forEach(task => {
-      if (!locationMap.has(task.location)) {
-        locationMap.set(task.location, { total: 0, completed: 0 });
+      const location = task.location as string;
+      if (!locationMap.has(location)) {
+        locationMap.set(location, { total: 0, completed: 0 });
       }
-      const stats = locationMap.get(task.location);
-      stats.total++;
-      if (task.status === 'completed') stats.completed++;
+      const stats = locationMap.get(location);
+      if (stats) {
+        stats.total++;
+        if (task.status === 'completed') stats.completed++;
+      }
     });
 
-    return Array.from(locationMap.entries()).map(([location, stats]: [string, any]) => ({
+    return Array.from(locationMap.entries()).map(([location, stats]) => ({
       location,
       total: stats.total,
       completed: stats.completed,

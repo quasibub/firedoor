@@ -80,9 +80,5 @@ jobs:
         echo "=== Package size ==="
         du -sh production-package/
         
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: 'fire-door-backend'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: production-package/
+    # Azure will now handle deployment automatically using its built-in GitHub Actions integration
+    # The production package is ready for Azure to deploy

@@ -1,6 +1,5 @@
 import offlineStorage from './offlineStorage';
 import networkStatus from './networkStatus';
-import API_ENDPOINTS from '../config/api';
 
 // Sync service for handling offline/online data synchronization
 class SyncService {

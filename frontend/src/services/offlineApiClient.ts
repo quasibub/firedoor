@@ -1,7 +1,6 @@
 import networkStatus from './networkStatus';
 import syncService from './syncService';
 import offlineStorage from './offlineStorage';
-import API_ENDPOINTS from '../config/api';
 
 // Offline-aware API client
 class OfflineApiClient {

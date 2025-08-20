@@ -1,37 +1,31 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { OfflineInspection, OfflineTask, OfflineTaskPhoto, OfflineTaskRejection, SyncQueueItem } from '../types/offline';
 
 // Database schema for offline storage
 interface OfflineDB extends DBSchema {
   inspections: {
     key: string;
-    value: any;
+    value: OfflineInspection;
     indexes: { 'by-sync-status': string };
   };
   tasks: {
     key: string;
-    value: any;
+    value: OfflineTask;
     indexes: { 'by-sync-status': string };
   };
   taskPhotos: {
     key: string;
-    value: any;
+    value: OfflineTaskPhoto;
     indexes: { 'by-sync-status': string };
   };
   taskRejections: {
     key: string;
-    value: any;
+    value: OfflineTaskRejection;
     indexes: { 'by-sync-status': string };
   };
   syncQueue: {
     key: string;
-    value: {
-      id: string;
-      type: 'CREATE' | 'UPDATE' | 'DELETE';
-      endpoint: string;
-      data: any;
-      timestamp: number;
-      retryCount: number;
-    };
+    value: SyncQueueItem;
     indexes: { 'by-timestamp': number };
   };
 }
@@ -76,7 +70,7 @@ class OfflineStorageService {
   }
 
   // Store inspection data offline
-  async storeInspection(inspection: any): Promise<void> {
+  async storeInspection(inspection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const offlineInspection = {
@@ -91,7 +85,7 @@ class OfflineStorageService {
   }
 
   // Store task data offline
-  async storeTask(task: any): Promise<void> {
+  async storeTask(task: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const offlineTask = {
@@ -106,7 +100,7 @@ class OfflineStorageService {
   }
 
   // Store task photo offline
-  async storeTaskPhoto(photo: any): Promise<void> {
+  async storeTaskPhoto(photo: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const offlinePhoto = {
@@ -123,7 +117,7 @@ class OfflineStorageService {
   }
 
   // Store task rejection offline
-  async storeTaskRejection(rejection: any): Promise<void> {
+  async storeTaskRejection(rejection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const offlineRejection = {
@@ -138,7 +132,7 @@ class OfflineStorageService {
   }
 
   // Add request to sync queue
-  async addToSyncQueue(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: any): Promise<void> {
+  async addToSyncQueue(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const queueItem = {
@@ -155,7 +149,7 @@ class OfflineStorageService {
   }
 
   // Get all pending sync items
-  async getPendingSyncItems(): Promise<any[]> {
+  async getPendingSyncItems(): Promise<SyncQueueItem[]> {
     if (!this.db) throw new Error('Database not initialized');
     
     const items = await this.db.getAllFromIndex('syncQueue', 'by-timestamp');
@@ -163,28 +157,28 @@ class OfflineStorageService {
   }
 
   // Get offline inspections
-  async getOfflineInspections(): Promise<any[]> {
+  async getOfflineInspections(): Promise<OfflineInspection[]> {
     if (!this.db) throw new Error('Database not initialized');
     
     return await this.db.getAll('inspections');
   }
 
   // Get offline tasks
-  async getOfflineTasks(): Promise<any[]> {
+  async getOfflineTasks(): Promise<OfflineTask[]> {
     if (!this.db) throw new Error('Database not initialized');
     
     return await this.db.getAll('tasks');
   }
 
   // Get offline task photos
-  async getOfflineTaskPhotos(): Promise<any[]> {
+  async getOfflineTaskPhotos(): Promise<OfflineTaskPhoto[]> {
     if (!this.db) throw new Error('Database not initialized');
     
     return await this.db.getAll('taskPhotos');
   }
 
   // Get offline task rejections
-  async getOfflineTaskRejections(): Promise<any[]> {
+  async getOfflineTaskRejections(): Promise<OfflineTaskRejection[]> {
     if (!this.db) throw new Error('Database not initialized');
     
     return await this.db.getAll('taskRejections');

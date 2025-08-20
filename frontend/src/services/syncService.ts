@@ -1,5 +1,6 @@
 import offlineStorage from './offlineStorage';
 import networkStatus from './networkStatus';
+import { SyncStatus, NetworkStatus } from '../types/offline';
 
 // Sync service for handling offline/online data synchronization
 class SyncService {
@@ -14,7 +15,7 @@ class SyncService {
 
   private initializeSync(): void {
     // Subscribe to network status changes
-    networkStatus.subscribe((status: { isOnline: boolean; quality: string; pingTime: number }) => {
+    networkStatus.subscribe((status: NetworkStatus) => {
       if (status.isOnline && !this.isSyncing) {
         this.processSyncQueue();
       }
@@ -191,11 +192,7 @@ class SyncService {
   }
 
   // Get sync status
-  async getSyncStatus(): Promise<{
-    isSyncing: boolean;
-    pendingItems: number;
-    storageInfo: any;
-  }> {
+  async getSyncStatus(): Promise<SyncStatus> {
     const pendingItems = await offlineStorage.getPendingSyncItems();
     const storageInfo = await offlineStorage.getStorageInfo();
 

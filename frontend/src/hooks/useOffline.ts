@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import networkStatus from '../services/networkStatus';
 import syncService from '../services/syncService';
 import offlineStorage from '../services/offlineStorage';
+import { NetworkStatus, SyncStatus } from '../types/offline';
 
 // Hook for offline functionality
 export const useOffline = () => {
-  const [networkState, setNetworkState] = useState(networkStatus.getStatus());
-  const [syncState, setSyncState] = useState({
+  const [networkState, setNetworkState] = useState<NetworkStatus>(networkStatus.getStatus());
+  const [syncState, setSyncState] = useState<SyncStatus>({
     isSyncing: false,
     pendingItems: 0,
     storageInfo: {
@@ -20,7 +21,7 @@ export const useOffline = () => {
 
   useEffect(() => {
     // Subscribe to network status changes
-    const unsubscribeNetwork = networkStatus.subscribe((status: { isOnline: boolean; quality: string; pingTime: number }) => {
+    const unsubscribeNetwork = networkStatus.subscribe((status: NetworkStatus) => {
       setNetworkState(status);
     });
 

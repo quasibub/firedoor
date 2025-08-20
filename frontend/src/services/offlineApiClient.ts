@@ -1,6 +1,7 @@
 import networkStatus from './networkStatus';
 import syncService from './syncService';
 import offlineStorage from './offlineStorage';
+import { OfflineTask, OfflineTaskPhoto, OfflineTaskRejection, OfflineReport, ApiResponse } from '../types/offline';
 
 // Offline-aware API client
 class OfflineApiClient {
@@ -15,7 +16,7 @@ class OfflineApiClient {
     endpoint: string,
     options: RequestInit = {},
     syncType?: 'CREATE' | 'UPDATE' | 'DELETE'
-  ): Promise<any> {
+  ): Promise<ApiResponse> {
     const url = `${this.baseUrl}${endpoint}`;
     const isOnline = networkStatus.isConnectionGood();
 
@@ -58,7 +59,7 @@ class OfflineApiClient {
   }
 
   // GET request (read-only, no sync needed)
-  async get(endpoint: string): Promise<any> {
+  async get(endpoint: string): Promise<ApiResponse> {
     const url = `${this.baseUrl}${endpoint}`;
     const isOnline = networkStatus.isConnectionGood();
 
@@ -83,7 +84,7 @@ class OfflineApiClient {
   }
 
   // POST request (create)
-  async post(endpoint: string, data: any): Promise<any> {
+  async post(endpoint: string, data: Record<string, any>): Promise<ApiResponse> {
     return await this.makeRequest(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -91,7 +92,7 @@ class OfflineApiClient {
   }
 
   // PUT request (update)
-  async put(endpoint: string, data: any): Promise<any> {
+  async put(endpoint: string, data: Record<string, any>): Promise<ApiResponse> {
     return await this.makeRequest(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -99,7 +100,7 @@ class OfflineApiClient {
   }
 
   // DELETE request
-  async delete(endpoint: string): Promise<any> {
+  async delete(endpoint: string): Promise<ApiResponse> {
     return await this.makeRequest(endpoint, {
       method: 'DELETE',
     }, 'DELETE');
@@ -173,7 +174,7 @@ class OfflineApiClient {
   }
 
   // Calculate priority breakdown from offline tasks
-  private calculatePriorityBreakdown(tasks: any[]): Record<string, Record<string, number>> {
+  private calculatePriorityBreakdown(tasks: OfflineTask[]): Record<string, Record<string, number>> {
     const breakdown: Record<string, Record<string, number>> = {
       critical: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
       high: { total: 0, completed: 0, pending: 0, inProgress: 0, rejected: 0 },
@@ -195,7 +196,7 @@ class OfflineApiClient {
   }
 
   // Calculate category stats from offline tasks
-  private calculateCategoryStats(tasks: any[]): Array<{ category: string; total: number; completed: number; completionRate: number }> {
+  private calculateCategoryStats(tasks: OfflineTask[]): Array<{ category: string; total: number; completed: number; completionRate: number }> {
     const categoryMap = new Map<string, { total: number; completed: number }>();
     
     tasks.forEach(task => {
@@ -219,7 +220,7 @@ class OfflineApiClient {
   }
 
   // Calculate location stats from offline tasks
-  private calculateLocationStats(tasks: any[]): Array<{ location: string; total: number; completed: number; completionRate: number }> {
+  private calculateLocationStats(tasks: OfflineTask[]): Array<{ location: string; total: number; completed: number; completionRate: number }> {
     const locationMap = new Map<string, { total: number; completed: number }>();
     
     tasks.forEach(task => {
@@ -248,7 +249,7 @@ class OfflineApiClient {
   }
 
   // Get network status
-  getNetworkStatus(): any {
+  getNetworkStatus(): NetworkStatus {
     return networkStatus.getStatus();
   }
 

@@ -1,8 +1,10 @@
+import { NetworkStatus } from '../types/offline';
+
 // Network status detection and monitoring service
 class NetworkStatusService {
   private isOnline: boolean = navigator.onLine;
   private connectionQuality: 'excellent' | 'good' | 'poor' | 'offline' = 'excellent';
-  private listeners: Array<(status: { isOnline: boolean; quality: string; pingTime: number }) => void> = [];
+  private listeners: Array<(status: NetworkStatus) => void> = [];
   private pingInterval: NodeJS.Timeout | null = null;
   private lastPingTime: number = 0;
   private pingTimeout: number = 5000; // 5 seconds
@@ -98,7 +100,7 @@ class NetworkStatusService {
   }
 
   // Subscribe to network status changes
-  subscribe(listener: (status: { isOnline: boolean; quality: string; pingTime: number }) => void): () => void {
+  subscribe(listener: (status: NetworkStatus) => void): () => void {
     this.listeners.push(listener);
     
     // Immediately call with current status
@@ -118,7 +120,7 @@ class NetworkStatusService {
   }
 
   // Get current network status
-  getStatus(): { isOnline: boolean; quality: string; pingTime: number } {
+  getStatus(): NetworkStatus {
     return {
       isOnline: this.isOnline,
       quality: this.connectionQuality,

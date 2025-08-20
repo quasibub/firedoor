@@ -21,13 +21,13 @@ import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
-// DEBUG: Test if Azure is running new code - FIXED PACKAGE STRUCTURE TEST
-console.log('🎯🎯🎯 FIXED PACKAGE STRUCTURE - TESTING! 🎯🎯🎯');
-console.log('🎯🎯🎯 FIXED PACKAGE STRUCTURE - TESTING! 🎯🎯🎯');
-console.log('🎯🎯🎯 FIXED PACKAGE STRUCTURE - TESTING! 🎯🎯🎯');
+// DEBUG: Test if Azure is running new code - CODEX FIX TEST
+console.log('🎯🎯🎯 CODEX DEPLOYMENT FIX - TESTING! 🎯🎯🎯');
+console.log('🎯🎯🎯 CODEX DEPLOYMENT FIX - TESTING! 🎯🎯🎯');
+console.log('🎯🎯🎯 CODEX DEPLOYMENT FIX - TESTING! 🎯🎯🎯');
 console.log('Timestamp:', new Date().toISOString());
-console.log('Commit:', 'b3d610c3c37d828649a21c50c02cbb36682e1478');
-console.log('Deployment Method: Fixed Package Structure + azure/webapps-deploy@v3');
+console.log('Commit:', '2fddf7b');
+console.log('Deployment Method: Codex Fix');
 
 // Load environment variables
 dotenv.config();

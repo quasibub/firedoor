@@ -73,13 +73,13 @@ class OfflineStorageService {
   async storeInspection(inspection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineInspection: OfflineInspection = {
+    const offlineInspection = {
       ...inspection,
       id: inspection.id || `offline_${Date.now()}_${Math.random()}`,
-      syncStatus: 'PENDING',
+      syncStatus: 'PENDING' as const,
       offlineId: inspection.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
-    };
+    } satisfies OfflineInspection;
 
     await this.db.put('inspections', offlineInspection);
     console.log('📥 Inspection stored offline:', offlineInspection.offlineId);
@@ -89,13 +89,13 @@ class OfflineStorageService {
   async storeTask(task: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineTask: OfflineTask = {
+    const offlineTask = {
       ...task,
       id: task.id || `offline_${Date.now()}_${Math.random()}`,
-      syncStatus: 'PENDING',
+      syncStatus: 'PENDING' as const,
       offlineId: task.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
-    };
+    } satisfies OfflineTask;
 
     await this.db.put('tasks', offlineTask);
     console.log('📥 Task stored offline:', offlineTask.offlineId);
@@ -105,15 +105,15 @@ class OfflineStorageService {
   async storeTaskPhoto(photo: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlinePhoto: OfflineTaskPhoto = {
+    const offlinePhoto = {
       ...photo,
       id: photo.id || `offline_${Date.now()}_${Math.random()}`,
-      syncStatus: 'PENDING',
+      syncStatus: 'PENDING' as const,
       offlineId: photo.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
       // Convert blob to base64 for offline storage
       imageData: photo.blob ? await this.blobToBase64(photo.blob) : photo.imageData,
-    };
+    } satisfies OfflineTaskPhoto;
 
     await this.db.put('taskPhotos', offlinePhoto);
     console.log('📥 Task photo stored offline:', offlinePhoto.offlineId);
@@ -123,13 +123,13 @@ class OfflineStorageService {
   async storeTaskRejection(rejection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineRejection: OfflineTaskRejection = {
+    const offlineRejection = {
       ...rejection,
       id: rejection.id || `offline_${Date.now()}_${Math.random()}`,
-      syncStatus: 'PENDING',
+      syncStatus: 'PENDING' as const,
       offlineId: rejection.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
-    };
+    } satisfies OfflineTaskRejection;
 
     await this.db.put('taskRejections', offlineRejection);
     console.log('📥 Task rejection stored offline:', offlineRejection.offlineId);
@@ -139,14 +139,14 @@ class OfflineStorageService {
   async addToSyncQueue(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const queueItem: SyncQueueItem = {
+    const queueItem = {
       id: `sync_${Date.now()}_${Math.random()}`,
       type,
       endpoint,
       data,
       timestamp: Date.now(),
       retryCount: 0,
-    };
+    } satisfies SyncQueueItem;
 
     await this.db.put('syncQueue', queueItem);
     console.log('📋 Added to sync queue:', queueItem.id);

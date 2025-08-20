@@ -13,10 +13,10 @@ export interface OfflineTask {
   syncStatus: 'PENDING' | 'SYNCED' | 'FAILED';
   offlineId: string;
   lastModified: number;
-  status: 'pending' | 'in-progress' | 'completed' | 'rejected' | 'cancelled';
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  category: string;
-  location: string;
+  status?: 'pending' | 'in-progress' | 'completed' | 'rejected' | 'cancelled';
+  priority?: 'critical' | 'high' | 'medium' | 'low';
+  category?: string;
+  location?: string;
   [key: string]: any; // Allow additional properties from original task
 }
 

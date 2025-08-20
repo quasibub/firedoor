@@ -34,10 +34,11 @@ jobs:
         rm -rf deployment-package deployment-package.zip
         mkdir -p deployment-package
         cp -r backend/dist/. deployment-package/
-        cp backend/package.json deployment-package/
+        cp backend/package.json backend/package-lock.json deployment-package/
         mkdir -p deployment-package/config
         cp backend/src/config/schema.sql deployment-package/config/
-        zip -r deployment-package.zip deployment-package
+        cd deployment-package
+        zip -r ../deployment-package.zip .
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3

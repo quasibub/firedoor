@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import API_ENDPOINTS from '../../config/api';
 import {
   Box,
@@ -528,7 +528,7 @@ PRIORITY BREAKDOWN
       ['Low', report.priorityBreakdown.low.total, report.priorityBreakdown.low.completed, report.priorityBreakdown.low.pending, report.priorityBreakdown.low.inProgress, report.priorityBreakdown.low.rejected]
     ];
 
-    doc.autoTable({
+    const priorityTableResult = autoTable(doc, {
       head: [priorityData[0]],
       body: priorityData.slice(1),
       startY: yPosition,
@@ -537,7 +537,7 @@ PRIORITY BREAKDOWN
       styles: { fontSize: 8 }
     });
     
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    yPosition = priorityTableResult.finalY + 15;
 
     // Category Performance
     addText('CATEGORY PERFORMANCE', 20, yPosition, 12, 'bold');
@@ -548,7 +548,7 @@ PRIORITY BREAKDOWN
       ...report.categoryStats.map(cat => [cat.category, cat.total, cat.completed, cat.completionRate])
     ];
 
-    doc.autoTable({
+    const categoryTableResult = autoTable(doc, {
       head: [categoryData[0]],
       body: categoryData.slice(1),
       startY: yPosition,
@@ -557,7 +557,7 @@ PRIORITY BREAKDOWN
       styles: { fontSize: 8 }
     });
     
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    yPosition = categoryTableResult.finalY + 15;
 
     // Location Performance
     addText('LOCATION PERFORMANCE', 20, yPosition, 12, 'bold');
@@ -568,7 +568,7 @@ PRIORITY BREAKDOWN
       ...report.locationStats.map(loc => [loc.location, loc.total, loc.completed, loc.completionRate])
     ];
 
-    doc.autoTable({
+    const locationTableResult = autoTable(doc, {
       head: [locationData[0]],
       body: locationData.slice(1),
       startY: yPosition,
@@ -577,7 +577,7 @@ PRIORITY BREAKDOWN
       styles: { fontSize: 8 }
     });
     
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    yPosition = locationTableResult.finalY + 15;
 
     // Recent Activity
     addText('RECENT ACTIVITY (Last 30 Days)', 20, yPosition, 12, 'bold');

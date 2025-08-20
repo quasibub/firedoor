@@ -52,26 +52,27 @@ async function initializeDatabase() {
       if (process.env.NODE_ENV === 'development') {
         console.log('📝 Adding additional sample data for development...');
 
-      // Add sample inspection
-      const { rows: [inspection] } = await pool.query(`
-        INSERT INTO inspections (location, inspector_name, date, status, total_doors, compliant_doors, non_compliant_doors, critical_issues, notes)
-        VALUES ('Main Building - Floor 1', 'John Inspector', '2024-01-15', 'completed', 12, 10, 2, 1, 'Overall good condition, minor issues found')
-        RETURNING id
-      `);
+        // Add sample inspection
+        const { rows: [inspection] } = await pool.query(`
+          INSERT INTO inspections (location, inspector_name, date, status, total_doors, compliant_doors, non_compliant_doors, critical_issues, notes)
+          VALUES ('Main Building - Floor 1', 'John Inspector', '2024-01-15', 'completed', 12, 10, 2, 1, 'Overall good condition, minor issues found')
+          RETURNING id
+        `);
 
-             // Add sample tasks
-       await pool.query(`
-         INSERT INTO tasks (inspection_id, door_id, location, title, description, priority, status, assigned_to, category)
-         VALUES 
-           ($1, 'FD-001', 'Main Building - Floor 1', 'Replace damaged door closer', 'Door closer needs replacement due to wear', 'high', 'in-progress', 'John Inspector', 'Hardware Issues'),
-           ($1, 'FD-002', 'Main Building - Floor 1', 'Fix door frame alignment', 'Door frame slightly misaligned', 'medium', 'pending', 'John Inspector', 'Structural Repairs')
-       `, [inspection.id]);
+        // Add sample tasks
+        await pool.query(`
+          INSERT INTO tasks (inspection_id, door_id, location, title, description, priority, status, assigned_to, category)
+          VALUES 
+            ($1, 'FD-001', 'Main Building - Floor 1', 'Replace damaged door closer', 'Door closer needs replacement due to wear', 'high', 'in-progress', 'John Inspector', 'Hardware Issues'),
+            ($1, 'FD-002', 'Main Building - Floor 1', 'Fix door frame alignment', 'Door frame slightly misaligned', 'medium', 'pending', 'John Inspector', 'Structural Repairs')
+        `, [inspection.id]);
 
-      console.log('✅ Sample data added successfully');
-      console.log('⚠️  IMPORTANT: Default credentials created for development only');
-      console.log('   Inspector: inspector@example.com / Inspector2024!');
-      console.log('   Admin: admin@example.com / Admin2024!');
-      console.log('   CHANGE THESE PASSWORDS IN PRODUCTION!');
+        console.log('✅ Sample data added successfully');
+        console.log('⚠️  IMPORTANT: Default credentials created for development only');
+        console.log('   Inspector: inspector@example.com / Inspector2024!');
+        console.log('   Admin: admin@example.com / Admin2024!');
+        console.log('   CHANGE THESE PASSWORDS IN PRODUCTION!');
+      }
     } else {
       if (process.env.NODE_ENV === 'development') {
         console.log('ℹ️  Database already contains data, skipping sample data');

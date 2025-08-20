@@ -1,50 +1,209 @@
-name: Deploy Backend to Azure
+name: Deploy Backend to Azure App Service
 
 on:
   push:
-    branches: [ master ]      # change to 'main' if that is your default branch
+    branches: [ master ]
     paths:
       - 'backend/**'
-  workflow_dispatch:           # allows manual runs from the Actions tab
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  NODE_VERSION: '20'
+  AZURE_WEBAPP_NAME: fire-door-backend
+  AZURE_WEBAPP_PACKAGE_PATH: backend/deployment-package.zip
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Setup working directory
+        run: |
+          echo "Working directory: $(pwd)"
+          echo "Backend directory: $(pwd)/backend"
+          ls -la backend/
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Build TypeScript
-        run: npm run build
-
-      - name: Prepare deployment package
+        working-directory: backend
         run: |
+          echo "Installing dependencies..."
+          npm ci --only=production=false
+          echo "Dependencies installed successfully"
+
+      - name: Build TypeScript application
+        working-directory: backend
+        run: |
+          echo "Building TypeScript application..."
+          npm run build
+          echo "Build completed successfully"
+          echo "Build output:"
+          ls -la dist/
+
+      - name: Validate build output
+        working-directory: backend
+        run: |
+          echo "Validating build output..."
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Error: dist/index.js not found!"
+            exit 1
+          fi
+          echo "✅ Build validation passed"
+          echo "Main entry point: dist/index.js"
+
+      - name: Create deployment package
+        working-directory: backend
+        run: |
+          echo "Creating deployment package..."
+          
+          # Clean previous packages
           rm -rf deployment-package deployment-package.zip
+          
+          # Create package directory
           mkdir -p deployment-package
+          
+          # Copy built application files
+          echo "Copying built files..."
           cp -r dist/* deployment-package/
+          
+          # Copy package files
+          echo "Copying package files..."
           cp package.json package-lock.json deployment-package/
+          
+          # Copy configuration files
+          echo "Copying configuration files..."
           mkdir -p deployment-package/config
-          cp src/config/schema.sql deployment-package/config/
+          cp src/config/*.sql deployment-package/config/
+          
+          # Copy environment template
+          cp env.production.template deployment-package/.env.template
+          
+          # Install production dependencies
+          echo "Installing production dependencies..."
           cd deployment-package
-          npm ci --only=production
+          npm ci --only=production --ignore-scripts
+          
+          # Fix package.json for Azure App Service
+          echo "Fixing package.json for Azure deployment..."
+          sed -i 's/"main": "dist\/index.js"/"main": "index.js"/' package.json
+          sed -i 's/"start": "node dist\/index.js"/"start": "node index.js"/' package.json
+          
+          # Add Azure-specific startup script
+          echo "Adding Azure startup configuration..."
+          cat > web.config << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <system.webServer>
+              <handlers>
+                <add name="iisnode" path="index.js" verb="*" modules="iisnode" />
+              </handlers>
+              <rewrite>
+                <rules>
+                  <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
+                    <match url="^index.js\/debug[\/]?" />
+                  </rule>
+                  <rule name="StaticContent">
+                    <action type="Rewrite" url="public{REQUEST_URI}" />
+                  </rule>
+                  <rule name="DynamicContent">
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True" />
+                    </conditions>
+                    <action type="Rewrite" url="index.js" />
+                  </rule>
+                </rules>
+              </rewrite>
+              <security>
+                <requestFiltering>
+                  <hiddenSegments>
+                    <remove segment="bin" />
+                  </hiddenSegments>
+                </requestFiltering>
+              </security>
+              <httpErrors existingResponse="PassThrough" />
+            </system.webServer>
+          </configuration>
+          EOF
+          
+          # Create startup script
+          cat > startup.sh << 'EOF'
+          #!/bin/bash
+          echo "Starting Fire Door Inspection Backend..."
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          echo "Starting application..."
+          exec node index.js
+          EOF
+          chmod +x startup.sh
+          
           cd ..
-          zip -r deployment-package.zip deployment-package/
+          
+          echo "Deployment package created successfully"
+          echo "Package contents:"
+          ls -la deployment-package/
+
+      - name: Create deployment archive
+        working-directory: backend
+        run: |
+          echo "Creating deployment archive..."
+          cd deployment-package
+          zip -r ../deployment-package.zip . -x "*.git*" "*.DS_Store*" "*.log"
+          cd ..
+          
+          echo "Archive created successfully"
+          echo "Archive size: $(du -h deployment-package.zip | cut -f1)"
+          echo "Archive contents:"
+          unzip -l deployment-package.zip | head -20
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'fire-door-backend'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: backend/deployment-package.zip
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployment to stabilize..."
+          sleep 30
+          
+          echo "Checking application status..."
+          # Basic health check - adjust URL as needed
+          if curl -f -s "https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net" > /dev/null; then
+            echo "✅ Application is responding"
+          else
+            echo "⚠️  Application may still be starting up"
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📱 Application URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+          echo "🔧 Environment: ${{ github.event.inputs.environment || 'production' }}"
+          echo "📦 Package size: $(du -h ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} | cut -f1)"
+          echo "⏰ Deployment time: $(date -u)"

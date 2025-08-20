@@ -73,8 +73,9 @@ class OfflineStorageService {
   async storeInspection(inspection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineInspection = {
+    const offlineInspection: OfflineInspection = {
       ...inspection,
+      id: inspection.id || `offline_${Date.now()}_${Math.random()}`,
       syncStatus: 'PENDING',
       offlineId: inspection.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
@@ -88,8 +89,9 @@ class OfflineStorageService {
   async storeTask(task: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineTask = {
+    const offlineTask: OfflineTask = {
       ...task,
+      id: task.id || `offline_${Date.now()}_${Math.random()}`,
       syncStatus: 'PENDING',
       offlineId: task.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
@@ -103,8 +105,9 @@ class OfflineStorageService {
   async storeTaskPhoto(photo: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlinePhoto = {
+    const offlinePhoto: OfflineTaskPhoto = {
       ...photo,
+      id: photo.id || `offline_${Date.now()}_${Math.random()}`,
       syncStatus: 'PENDING',
       offlineId: photo.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
@@ -120,8 +123,9 @@ class OfflineStorageService {
   async storeTaskRejection(rejection: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const offlineRejection = {
+    const offlineRejection: OfflineTaskRejection = {
       ...rejection,
+      id: rejection.id || `offline_${Date.now()}_${Math.random()}`,
       syncStatus: 'PENDING',
       offlineId: rejection.id || `offline_${Date.now()}_${Math.random()}`,
       lastModified: Date.now(),
@@ -135,7 +139,7 @@ class OfflineStorageService {
   async addToSyncQueue(type: 'CREATE' | 'UPDATE' | 'DELETE', endpoint: string, data: Record<string, any>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
-    const queueItem = {
+    const queueItem: SyncQueueItem = {
       id: `sync_${Date.now()}_${Math.random()}`,
       type,
       endpoint,

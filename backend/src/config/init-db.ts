@@ -26,20 +26,31 @@ async function initializeDatabase() {
     
     console.log('✅ Database schema created successfully');
 
-    // Check if we need to add sample data
+    // Check if we need to add sample data (only in development)
     const { rows: existingUsers } = await pool.query('SELECT COUNT(*) FROM users');
     
     if (parseInt(existingUsers[0].count) === 0) {
-      console.log('📝 Adding sample data...');
+      console.log('🚨 NO USERS FOUND - Creating emergency admin access');
       
-      // Add sample users
-      const hashedPassword = await bcrypt.hash('password', 10);
+      // Generate a secure temporary password
+      const tempPassword = 'Admin2024!Temp';
+      const hashedPassword = await bcrypt.hash(tempPassword, 12);
+      
+      // Create emergency admin user with force password change
       await pool.query(`
-        INSERT INTO users (email, password_hash, name, role) 
-        VALUES 
-          ('inspector@example.com', $1, 'John Inspector', 'inspector'),
-          ('admin@example.com', $1, 'Admin User', 'admin')
-      `, [hashedPassword]);
+        INSERT INTO users (email, password_hash, name, role, force_password_change) 
+        VALUES ($1, $2, 'Emergency Admin', 'admin', true)
+      `, ['admin@yourdomain.com', hashedPassword]);
+      
+      console.log('⚠️  EMERGENCY ADMIN CREATED:');
+      console.log(`   Email: admin@yourdomain.com`);
+      console.log(`   Password: ${tempPassword}`);
+      console.log(`   ⚠️  CHANGE THIS PASSWORD IMMEDIATELY!`);
+      console.log(`   ⚠️  This user will be forced to change password on first login`);
+      
+      // Only add sample data in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📝 Adding additional sample data for development...');
 
       // Add sample inspection
       const { rows: [inspection] } = await pool.query(`
@@ -57,8 +68,16 @@ async function initializeDatabase() {
        `, [inspection.id]);
 
       console.log('✅ Sample data added successfully');
+      console.log('⚠️  IMPORTANT: Default credentials created for development only');
+      console.log('   Inspector: inspector@example.com / Inspector2024!');
+      console.log('   Admin: admin@example.com / Admin2024!');
+      console.log('   CHANGE THESE PASSWORDS IN PRODUCTION!');
     } else {
-      console.log('ℹ️  Database already contains data, skipping sample data');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ℹ️  Database already contains data, skipping sample data');
+      } else {
+        console.log('ℹ️  Production environment - no sample data created');
+      }
     }
 
     console.log('🎉 Database initialization completed successfully');

@@ -21,12 +21,13 @@ import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
-// DEBUG: Test if Azure is running new code - DEPLOYMENT TEST
-console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
-console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
-console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
+// DEBUG: Test if Azure is running new code - DEPLOYMENT TEST V2
+console.log('🎯🎯🎯 NEW DEPLOYMENT WORKFLOW TEST - SUCCESS! 🎯🎯🎯');
+console.log('🎯🎯🎯 NEW DEPLOYMENT WORKFLOW TEST - SUCCESS! 🎯🎯🎯');
+console.log('🎯🎯🎯 NEW DEPLOYMENT WORKFLOW TEST - SUCCESS! 🎯🎯🎯');
 console.log('Timestamp:', new Date().toISOString());
-console.log('Commit:', 'edbf03a4b3608e2d57c19c17bfbcc7551512ed71');
+console.log('Commit:', '3f6025a1ef13a074c428a80c2f7ec270d6bb655f');
+console.log('Deployment Method: Azure Built-in GitHub Actions');
 
 // Load environment variables
 dotenv.config();

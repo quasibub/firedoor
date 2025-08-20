@@ -30,55 +30,5 @@ jobs:
         cd backend
         npm run build
         
-    - name: Create production package
-      run: |
-        mkdir -p production-package
-        cd backend
-        npm run build
-        cd ..
-        # Copy ONLY the compiled JavaScript files (no .d.ts or .d.ts.map)
-        cp backend/dist/*.js production-package/
-        # Copy only the JavaScript files from each folder, not the entire folders
-        mkdir -p production-package/config
-        cp backend/dist/config/*.js production-package/config/ || true
-        mkdir -p production-package/routes
-        cp backend/dist/routes/*.js production-package/routes/ || true
-        mkdir -p production-package/services
-        cp backend/dist/services/*.js production-package/services/ || true
-        mkdir -p production-package/middleware
-        cp backend/dist/middleware/*.js production-package/middleware/ || true
-        cp backend/package.json production-package/
-        cp backend/package-lock.json production-package/ || true
-        # Fix the start script to point to the correct main file
-        sed -i 's/"start": "node dist\/index.js"/"start": "node index.js"/' production-package/package.json
-        # Remove the build script to prevent Azure from running tsc
-        sed -i 's/"build": "tsc"/"build": "echo \\"Build step skipped - pre-built JavaScript\\""/' production-package/package.json
-        # Verify the changes were made
-        echo "=== Updated package.json scripts ==="
-        grep -E '"start"|"build"' production-package/package.json
-        # Copy essential non-JavaScript files
-        cp backend/src/config/schema.sql production-package/config/
-        # Remove ALL source files - Azure won't see TypeScript
-        rm -rf production-package/src || true
-        rm -rf production-package/tsconfig.json || true
-        rm -rf production-package/uploads || true
-        # Remove Oryx config files that aren't working
-        rm -rf production-package/.oryxignore || true
-        rm -rf production-package/oryx-manifest.toml || true
-        # Remove ALL TypeScript-related files that might trigger detection
-        find production-package -name "*.d.ts" -delete
-        find production-package -name "*.js.map" -delete
-        find production-package -name "*.ts" -delete
-        find production-package -name "*.tsx" -delete
-        
-    - name: Debug package contents
-      run: |
-        echo "=== Production Package Contents ==="
-        ls -la production-package/
-        echo "=== Config folder contents ==="
-        ls -la production-package/config/
-        echo "=== Package size ==="
-        du -sh production-package/
-        
-    # Azure will now handle deployment automatically using its built-in GitHub Actions integration
-    # The production package is ready for Azure to deploy
+    # Let Azure handle the deployment automatically
+    # No manual package creation or deployment steps needed

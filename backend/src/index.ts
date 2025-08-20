@@ -29,6 +29,19 @@ console.log('Timestamp:', new Date().toISOString());
 console.log('Commit:', '2fddf7b');
 console.log('Deployment Method: Codex Fix');
 
+// Add startup error handling
+process.on('uncaughtException', (error) => {
+  console.error('🚨 UNCAUGHT EXCEPTION:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+console.log('🚀 Starting application...');
+
 // Load environment variables
 dotenv.config();
 

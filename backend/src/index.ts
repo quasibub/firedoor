@@ -21,13 +21,13 @@ import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
-// DEBUG: Test if Azure is running new code - SIMPLIFIED WORKFLOW TEST
-console.log('🚀🚀🚀 SIMPLIFIED WORKFLOW DEPLOYMENT - SUCCESS! 🚀🚀🚀');
-console.log('🚀🚀🚀 SIMPLIFIED WORKFLOW DEPLOYMENT - SUCCESS! 🚀🚀🚀');
-console.log('🚀🚀🚀 SIMPLIFIED WORKFLOW DEPLOYMENT - SUCCESS! 🚀🚀🚀');
+// DEBUG: Test if Azure is running new code - FIXED WORKFLOW TEST
+console.log('🎯🎯🎯 FIXED WORKFLOW DEPLOYMENT - TESTING! 🎯🎯🎯');
+console.log('🎯🎯🎯 FIXED WORKFLOW DEPLOYMENT - TESTING! 🎯🎯🎯');
+console.log('🎯🎯🎯 FIXED WORKFLOW DEPLOYMENT - TESTING! 🎯🎯🎯');
 console.log('Timestamp:', new Date().toISOString());
-console.log('Commit:', '3f6025a1ef13a074c428a80c2f7ec270d6bb655f');
-console.log('Deployment Method: Simplified GitHub Actions + Azure Auto-Deploy');
+console.log('Commit:', 'b3d610c3c37d828649a21c50c02cbb36682e1478');
+console.log('Deployment Method: Fixed GitHub Actions + azure/webapps-deploy@v3');
 
 // Load environment variables
 dotenv.config();

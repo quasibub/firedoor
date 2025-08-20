@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Box,
   Chip,
-  IconButton,
-  Tooltip,
   Typography,
   LinearProgress,
   Collapse,
@@ -14,10 +12,7 @@ import {
   Wifi as WifiIcon,
   WifiOff as WifiOffIcon,
   Sync as SyncIcon,
-  Storage as StorageIcon,
   Clear as ClearIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import useOffline from '../../hooks/useOffline';
 

@@ -122,7 +122,7 @@ export const showInstallPrompt = async (): Promise<void> => {
   console.log('📱 PWA install prompt requested');
 };
 
-export default {
+const serviceWorkerUtils = {
   registerServiceWorker,
   unregisterServiceWorker,
   isServiceWorkerRegistered,
@@ -131,3 +131,5 @@ export default {
   isPWAInstalled,
   showInstallPrompt,
 };
+
+export default serviceWorkerUtils;

@@ -596,11 +596,11 @@ const WorkmenTasks: React.FC = () => {
                     {taskPhotos.map((photo) => (
                       <Grid item xs={6} sm={4} key={photo.id}>
                         <Card>
-                          <img 
-                            src={`${API_ENDPOINTS.TASK_PHOTOS_BY_ID(photo.id).replace('/api/task-photos/', '/api')}${photo.photo_url}`} 
-                            alt={photo.description}
-                            style={{ width: '100%', height: 150, objectFit: 'cover' }}
-                          />
+                                                  <img 
+                          src={photo.photo_url} 
+                          alt={photo.description}
+                          style={{ width: '100%', height: 150, objectFit: 'cover' }}
+                        />
                           <CardContent>
                             <Typography variant="caption" color="textSecondary">
                               {photo.uploaded_by_name} • {new Date(photo.uploaded_at).toLocaleDateString()}

@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import HomeSelector from '../HomeSelector/HomeSelector';
 import { useAuth } from '../../contexts/AuthContext';
+import OfflineStatus from '../OfflineStatus/OfflineStatus';
 
 const drawerWidth = 240;
 
@@ -206,6 +207,9 @@ const Layout: React.FC = () => {
         <Toolbar />
         <Outlet />
       </Box>
+      
+      {/* Offline Status Indicator */}
+      <OfflineStatus />
     </Box>
   );
 };

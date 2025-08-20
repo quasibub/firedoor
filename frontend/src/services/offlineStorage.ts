@@ -191,7 +191,7 @@ class OfflineStorageService {
   }
 
   // Mark item as synced
-  async markAsSynced(storeName: string, id: string): Promise<void> {
+  async markAsSynced(storeName: 'inspections' | 'tasks' | 'taskPhotos' | 'taskRejections', id: string): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     
     const store = this.db.transaction(storeName, 'readwrite').objectStore(storeName);

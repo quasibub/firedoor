@@ -615,26 +615,84 @@ PRIORITY BREAKDOWN
           const photo = task.photos[j];
           
           try {
-            // Try to get the photo data
-            const photoResponse = await fetch(API_ENDPOINTS.TASK_PHOTOS_BY_ID(photo.id));
-            if (photoResponse.ok) {
-              const photoData = await photoResponse.json();
-              const base64 = photoData.data.photo_data;
-              
-              // Use helper function to handle image (no functions declared in loop)
-              yPosition = await handleImageInPDF(base64, yPosition);
-              
-            } else {
-              // Fallback to placeholder
+            // Add photo information to PDF
+            addText(`Photo ${j + 1}: ${photo.description || 'No description'}`, 25, yPosition);
+            yPosition = updateYPosition(6);
+            addText(`Uploaded: ${new Date(photo.created_at).toLocaleDateString()}`, 25, yPosition);
+            yPosition = updateYPosition(6);
+            addText(`By: ${photo.uploaded_by_name || 'Unknown'}`, 25, yPosition);
+            yPosition = updateYPosition(8);
+            
+            // Try to embed the actual photo in the PDF
+            try {
+              // Convert blob URL to base64 for PDF embedding
+              const response = await fetch(photo.photo_url);
+              if (response.ok) {
+                const blob = await response.blob();
+                const reader = new FileReader();
+                
+                reader.onload = () => {
+                  const base64 = reader.result as string;
+                  
+                  // Calculate image dimensions to fit in PDF
+                  const maxWidth = 160; // mm
+                  const maxHeight = 80; // mm
+                  
+                  // Create a temporary image to get dimensions
+                  const img = new Image();
+                  img.onload = () => {
+                    let imgWidth = img.width;
+                    let imgHeight = img.height;
+                    
+                    // Scale down if too large
+                    if (imgWidth > maxWidth) {
+                      const ratio = maxWidth / imgWidth;
+                      imgWidth = maxWidth;
+                      imgHeight = imgHeight * ratio;
+                    }
+                    
+                    if (imgHeight > maxHeight) {
+                      const ratio = maxHeight / imgHeight;
+                      imgHeight = maxHeight;
+                      imgWidth = imgWidth * ratio;
+                    }
+                    
+                    // Check if we need a new page for the image
+                    if (yPosition + imgHeight > 250) {
+                      doc.addPage();
+                      yPosition = 20;
+                    }
+                    
+                    // Add image to PDF
+                    doc.addImage(base64, 'JPEG', 25, yPosition, imgWidth, imgHeight);
+                    yPosition += imgHeight + 5;
+                  };
+                  
+                  img.src = base64;
+                };
+                
+                reader.readAsDataURL(blob);
+                
+                // Wait a bit for the image to process
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+              } else {
+                // Fallback to placeholder if image fetch fails
+                doc.rect(25, yPosition, 50, 30);
+                doc.text('Photo Unavailable', 30, yPosition + 15);
+                yPosition = updateYPosition(35);
+              }
+            } catch (imageError) {
+              // Fallback to placeholder if image processing fails
               doc.rect(25, yPosition, 50, 30);
-              doc.text('Photo Placeholder', 30, yPosition + 15);
+              doc.text('Photo Error', 30, yPosition + 15);
               yPosition = updateYPosition(35);
             }
             
           } catch (error) {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Photo ${j + 1}: Error loading image`, 25, yPosition);
+            doc.text(`Photo ${j + 1}: Error processing`, 25, yPosition);
             yPosition = updateYPosition(6);
           }
           

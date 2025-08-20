@@ -1,6 +1,6 @@
 import offlineStorage from './offlineStorage';
 import networkStatus from './networkStatus';
-import { SyncStatus, NetworkStatus } from '../types/offline';
+import { SyncStatus, NetworkStatus, SyncQueueItem } from '../types/offline';
 
 // Sync service for handling offline/online data synchronization
 class SyncService {

@@ -21,10 +21,12 @@ import remediationReportRoutes from './routes/remediation-reports';
 import homeRoutes from './routes/homes';
 import initializeDatabase from './config/init-db';
 
-// DEBUG: Test if Azure is running new code
-console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
-console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
-console.log('=== SERVER STARTING WITH NEW CODE - COMMIT d2d25914e8 ===');
+// DEBUG: Test if Azure is running new code - DEPLOYMENT TEST
+console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
+console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
+console.log('🚀🚀🚀 DEPLOYMENT TEST - NEW CODE DEPLOYED SUCCESSFULLY! 🚀🚀🚀');
+console.log('Timestamp:', new Date().toISOString());
+console.log('Commit:', 'edbf03a4b3608e2d57c19c17bfbcc7551512ed71');
 
 // Load environment variables
 dotenv.config();

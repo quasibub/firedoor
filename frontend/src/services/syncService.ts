@@ -5,7 +5,7 @@ import { SyncStatus, NetworkStatus } from '../types/offline';
 // Sync service for handling offline/online data synchronization
 class SyncService {
   private isSyncing: boolean = false;
-  private syncInterval: number | null = null;
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
   private maxRetries: number = 3;
   private retryDelay: number = 5000; // 5 seconds
 

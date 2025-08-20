@@ -14,7 +14,7 @@ class SyncService {
 
   private initializeSync(): void {
     // Subscribe to network status changes
-    networkStatus.subscribe((status) => {
+    networkStatus.subscribe((status: { isOnline: boolean; quality: string; pingTime: number }) => {
       if (status.isOnline && !this.isSyncing) {
         this.processSyncQueue();
       }

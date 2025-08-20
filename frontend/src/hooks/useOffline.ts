@@ -20,7 +20,7 @@ export const useOffline = () => {
 
   useEffect(() => {
     // Subscribe to network status changes
-    const unsubscribeNetwork = networkStatus.subscribe((status) => {
+    const unsubscribeNetwork = networkStatus.subscribe((status: { isOnline: boolean; quality: string; pingTime: number }) => {
       setNetworkState(status);
     });
 

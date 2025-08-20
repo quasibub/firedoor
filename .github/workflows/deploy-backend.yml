@@ -38,7 +38,9 @@ jobs:
           mkdir -p deployment-package/config
           cp src/config/schema.sql deployment-package/config/
           cd deployment-package
-          zip -r ../deployment-package.zip .
+          npm ci --only=production
+          cd ..
+          zip -r deployment-package.zip deployment-package/
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3

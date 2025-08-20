@@ -31,18 +31,17 @@ jobs:
         
     - name: Prepare deployment package
       run: |
+        rm -rf deployment-package deployment-package.zip
         mkdir -p deployment-package
-        cp backend/dist/*.js deployment-package/
-        cp backend/dist/config/*.js deployment-package/config/ || true
-        cp backend/dist/routes/*.js deployment-package/routes/ || true
-        cp backend/dist/services/*.js deployment-package/services/ || true
-        cp backend/dist/middleware/*.js deployment-package/middleware/ || true
+        cp -r backend/dist/. deployment-package/
         cp backend/package.json deployment-package/
+        mkdir -p deployment-package/config
         cp backend/src/config/schema.sql deployment-package/config/
+        zip -r deployment-package.zip deployment-package
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v3
       with:
         app-name: 'fire-door-backend'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: deployment-package/
+        package: deployment-package.zip

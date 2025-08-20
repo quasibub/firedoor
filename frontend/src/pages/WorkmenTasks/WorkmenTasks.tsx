@@ -27,7 +27,8 @@ import {
   Avatar,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   CameraAlt,
@@ -301,7 +302,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.status}
                     label="Status"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, status: e.target.value as Task['status'] })}
+                    onChange={(e: SelectChangeEvent<Task['status'] | 'all'>) => setFilters({ ...filters, status: e.target.value as Task['status'] })}
                   >
                     <MenuItem value="all">All Statuses</MenuItem>
                     <MenuItem value="pending">Pending</MenuItem>
@@ -318,7 +319,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.priority}
                     label="Priority"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, priority: e.target.value as Task['priority'] })}
+                    onChange={(e: SelectChangeEvent<Task['priority'] | 'all'>) => setFilters({ ...filters, priority: e.target.value as Task['priority'] })}
                   >
                     <MenuItem value="all">All Priorities</MenuItem>
                     <MenuItem value="low">Low</MenuItem>
@@ -334,7 +335,7 @@ const WorkmenTasks: React.FC = () => {
                   <Select
                     value={filters.doorId}
                     label="Door ID"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, doorId: e.target.value })}
+                    onChange={(e: SelectChangeEvent<string>) => setFilters({ ...filters, doorId: e.target.value })}
                   >
                     <MenuItem value="all">All Doors</MenuItem>
                     {uniqueDoorIds.map((doorId) => (

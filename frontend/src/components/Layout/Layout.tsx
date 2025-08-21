@@ -130,7 +130,7 @@ const Layout: React.FC = () => {
               textAlign: 'center'
             }}
           >
-            FigTree Fire Door
+            FigTree DoorCheck
           </Typography>
         </Box>
       </Toolbar>

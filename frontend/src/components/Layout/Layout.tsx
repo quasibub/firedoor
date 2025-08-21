@@ -80,7 +80,7 @@ const Layout: React.FC = () => {
             alt="FigTree Logo" 
             style={{ 
               height: '120px', 
-              width: 'auto',
+              width: '200px',
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
             onError={(e) => {

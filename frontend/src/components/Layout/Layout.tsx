@@ -74,12 +74,12 @@ const Layout: React.FC = () => {
   const drawer = (
     <div>
       <Toolbar>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexDirection: 'column', py: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexDirection: 'column', py: 3 }}>
           <img 
             src="/logo.svg" 
             alt="FigTree Logo" 
             style={{ 
-              height: '64px', 
+              height: '120px', 
               width: 'auto',
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
@@ -151,8 +151,8 @@ const Layout: React.FC = () => {
           </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
             <img 
-              src="/logo.svg" 
-              alt="FigTree Logo" 
+              src="/logotreeonly.svg" 
+              alt="FigTree Tree Logo" 
               style={{ 
                 height: '48px', 
                 width: 'auto',

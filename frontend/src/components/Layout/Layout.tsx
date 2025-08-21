@@ -74,12 +74,12 @@ const Layout: React.FC = () => {
   const drawer = (
     <div>
       <Toolbar>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <img 
             src="/logo.svg" 
             alt="FigTree Logo" 
             style={{ 
-              height: '32px', 
+              height: '48px', 
               width: 'auto',
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
@@ -99,7 +99,7 @@ const Layout: React.FC = () => {
             sx={{ 
               color: 'primary.main', 
               fontWeight: 600,
-              display: 'none' // Hidden by default, shows if image fails
+              display: 'block' // Show title alongside logo
             }}
           >
             FigTree Fire Door
@@ -153,7 +153,7 @@ const Layout: React.FC = () => {
               src="/logo.svg" 
               alt="FigTree Logo" 
               style={{ 
-                height: '28px', 
+                height: '36px', 
                 width: 'auto',
                 filter: 'brightness(0) saturate(100%) invert(100%)' // White filter for app bar
               }}

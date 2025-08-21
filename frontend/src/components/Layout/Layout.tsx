@@ -126,8 +126,12 @@ const Layout: React.FC = () => {
             sx={{ 
               color: 'primary.main', 
               fontWeight: 700,
-              display: 'block', // Show title alongside logo
-              textAlign: 'center'
+              display: 'block',
+              textAlign: 'center',
+              width: '100%',
+              px: 2,
+              wordBreak: 'break-word',
+              lineHeight: 1.2,
             }}
           >
             FigTree DoorCheck

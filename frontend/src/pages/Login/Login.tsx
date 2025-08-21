@@ -154,6 +154,11 @@ const Login: React.FC = () => {
             order: { xs: 1, md: 2 },
             flex: 1,
             maxWidth: { xs: '100%', md: '600px' },
+            minHeight: { xs: '200px', md: 'auto' },
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: 2,
+            p: 2,
+            border: '2px dashed rgba(255, 255, 255, 0.3)',
           }}
         >
           <img 
@@ -162,8 +167,13 @@ const Login: React.FC = () => {
             style={{ 
               height: 'auto',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '400px',
               filter: 'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)',
+            }}
+            onLoad={() => console.log('✅ logovectorwebsite.svg loaded successfully')}
+            onError={(e) => {
+              console.error('❌ Failed to load logovectorwebsite.svg');
+              e.currentTarget.style.display = 'none';
             }}
           />
         </Box>

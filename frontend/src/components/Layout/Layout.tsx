@@ -99,7 +99,16 @@ const Layout: React.FC = () => {
   const drawer = (
     <div>
       <Toolbar>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexDirection: 'column', py: 3, px: 0 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: 3, 
+          flexDirection: 'column', 
+          py: 3, 
+          px: 0,
+          width: '100%'
+        }}>
           <img 
             src="/logotreeonly.svg" 
             alt="FigTree Tree Logo" 
@@ -127,7 +136,7 @@ const Layout: React.FC = () => {
               color: 'primary.main', 
               fontWeight: 700,
               display: 'block',
-              textAlign: 'left',
+              textAlign: 'center',
               width: '100%',
               px: 0,
               wordBreak: 'break-word',

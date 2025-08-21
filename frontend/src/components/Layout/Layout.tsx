@@ -48,6 +48,8 @@ const menuItems = [
 const Layout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [titleWidth, setTitleWidth] = useState(220); // Default width for logo
+  const titleRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,6 +73,27 @@ const Layout: React.FC = () => {
     handleMenuClose();
   };
 
+  // Measure title width and apply to logo
+  useEffect(() => {
+    if (titleRef.current) {
+      const width = titleRef.current.getBoundingClientRect().width;
+      setTitleWidth(width);
+    }
+  }, []);
+
+  // Re-measure on window resize for responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      if (titleRef.current) {
+        const width = titleRef.current.getBoundingClientRect().width;
+        setTitleWidth(width);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const drawer = (
     <div>
       <Toolbar>
@@ -80,7 +103,7 @@ const Layout: React.FC = () => {
             alt="FigTree Logo" 
             style={{ 
               height: '120px', 
-              width: '220px',
+              width: `${titleWidth}px`,
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
             onError={(e) => {
@@ -93,6 +116,7 @@ const Layout: React.FC = () => {
             }}
           />
           <Typography 
+            ref={titleRef}
             variant="h5" 
             noWrap 
             component="div" 

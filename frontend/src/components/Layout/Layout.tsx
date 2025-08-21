@@ -74,9 +74,34 @@ const Layout: React.FC = () => {
   const drawer = (
     <div>
       <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ color: 'primary.main', fontWeight: 600 }}>
-          FigTree Fire Door
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img 
+            src="/figtree-logo.svg" 
+            alt="FigTree Logo" 
+            style={{ 
+              height: '32px', 
+              width: 'auto',
+              filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
+            }}
+            onError={(e) => {
+              // Fallback to text if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextSibling.style.display = 'block';
+            }}
+          />
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              color: 'primary.main', 
+              fontWeight: 600,
+              display: 'none' // Hidden by default, shows if image fails
+            }}
+          >
+            FigTree Fire Door
+          </Typography>
+        </Box>
       </Toolbar>
       <Divider />
       <List>
@@ -120,9 +145,23 @@ const Layout: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {menuItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+            <img 
+              src="/figtree-logo.svg" 
+              alt="FigTree Logo" 
+              style={{ 
+                height: '28px', 
+                width: 'auto',
+                filter: 'brightness(0) saturate(100%) invert(100%)' // White filter for app bar
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <Typography variant="h6" noWrap component="div">
+              {menuItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+            </Typography>
+          </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <HomeSelector />
             <IconButton

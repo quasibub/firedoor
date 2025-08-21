@@ -101,22 +101,14 @@ const Layout: React.FC = () => {
       <Toolbar>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexDirection: 'column', py: 3 }}>
           <img 
-            src="/logo.svg" 
-            alt="FigTree Logo" 
+            src="/logotreeonly.svg" 
+            alt="FigTree Tree Logo" 
             style={{ 
               height: '120px', 
               width: `${titleWidth}px`,
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
-            onLoad={(e) => {
-              // Force SVG to ignore its viewBox and fill the container
-              const svg = e.currentTarget.querySelector('svg');
-              if (svg) {
-                svg.setAttribute('preserveAspectRatio', 'none');
-                console.log('🎯 SVG viewBox overridden - logo should now fill width');
-              }
-              console.log('🖼️ Logo loaded with width:', titleWidth, 'px');
-            }}
+            onLoad={() => console.log('🖼️ Tree logo loaded with width:', titleWidth, 'px')}
             onError={(e) => {
               // Fallback to text if image fails to load
               e.currentTarget.style.display = 'none';

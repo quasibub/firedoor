@@ -127,7 +127,7 @@ const Layout: React.FC = () => {
               color: 'primary.main', 
               fontWeight: 700,
               display: 'block',
-              textAlign: 'center',
+              textAlign: 'left',
               width: '100%',
               px: 2,
               wordBreak: 'break-word',

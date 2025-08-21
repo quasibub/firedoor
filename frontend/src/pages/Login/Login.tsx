@@ -45,7 +45,7 @@ const Login: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #9BC1A9 0%, #8B5A96 100%)',
         p: 2,
       }}
     >
@@ -59,8 +59,18 @@ const Login: React.FC = () => {
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Fire Door Inspection
+          <img 
+            src="/logotreeonly.svg" 
+            alt="FigTree Logo" 
+            style={{ 
+              height: '80px', 
+              width: 'auto',
+              filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)',
+              marginBottom: '16px'
+            }}
+          />
+          <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#9BC1A9', fontWeight: 700 }}>
+            FigTree Fire Door
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Sign in to access the inspection portal

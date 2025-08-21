@@ -76,7 +76,7 @@ const Layout: React.FC = () => {
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <img 
-            src="/figtree-logo.svg" 
+            src="/logo.svg" 
             alt="FigTree Logo" 
             style={{ 
               height: '32px', 
@@ -150,7 +150,7 @@ const Layout: React.FC = () => {
           </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
             <img 
-              src="/figtree-logo.svg" 
+              src="/logo.svg" 
               alt="FigTree Logo" 
               style={{ 
                 height: '28px', 

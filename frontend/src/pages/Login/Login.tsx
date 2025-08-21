@@ -164,6 +164,7 @@ const Login: React.FC = () => {
             p: 3,
             border: '3px solid rgba(255, 255, 255, 0.5)',
             position: 'relative',
+            overflow: 'hidden',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -184,10 +185,10 @@ const Login: React.FC = () => {
               height: '300px',
               width: 'auto',
               maxWidth: '400px',
-              // Remove complex filter that might be hiding the logo
               filter: 'brightness(0) saturate(100%) invert(100%)',
               zIndex: 1,
               position: 'relative',
+              objectFit: 'contain',
             }}
             onLoad={() => console.log('✅ logovectorwebsite.svg loaded successfully')}
             onError={(e) => {

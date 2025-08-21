@@ -35,34 +35,16 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     
-    <!-- Service Worker Registration -->
+    <!-- Unregister any existing Service Workers -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          // Try to register the service worker
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(function(registration) {
-              console.log('✅ Service Worker registered successfully:', registration);
-              
-              // Handle updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('🔄 New service worker available');
-                    }
-                  });
-                }
-              });
-            })
-            .catch(function(registrationError) {
-              console.warn('⚠️ Service Worker registration failed:', registrationError);
-              console.log('ℹ️ App will work without offline caching');
-            });
+        // Unregister any existing service workers
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('🗑️ Unregistered existing Service Worker');
+          }
         });
-      } else {
-        console.log('ℹ️ Service Worker not supported in this browser');
       }
     </script>
   </body>

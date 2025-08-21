@@ -49,6 +49,7 @@ const Layout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [titleWidth, setTitleWidth] = useState(220); // Default width for logo
+  console.log('🔍 Current titleWidth state:', titleWidth);
   const titleRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const Layout: React.FC = () => {
   useEffect(() => {
     if (titleRef.current) {
       const width = titleRef.current.getBoundingClientRect().width;
+      console.log('🎯 Title width measured:', width, 'px');
       setTitleWidth(width);
     }
   }, []);
@@ -106,6 +108,7 @@ const Layout: React.FC = () => {
               width: `${titleWidth}px`,
               filter: 'brightness(0) saturate(100%) invert(67%) sepia(12%) saturate(1237%) hue-rotate(89deg) brightness(95%) contrast(87%)'
             }}
+            onLoad={() => console.log('🖼️ Logo loaded with width:', titleWidth, 'px')}
             onError={(e) => {
               // Fallback to text if image fails to load
               e.currentTarget.style.display = 'none';

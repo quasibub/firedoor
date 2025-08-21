@@ -74,8 +74,8 @@ const Layout: React.FC = () => {
   const drawer = (
     <div>
       <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          Fire Door App
+        <Typography variant="h6" noWrap component="div" sx={{ color: 'primary.main', fontWeight: 600 }}>
+          FigTree Fire Door
         </Typography>
       </Toolbar>
       <Divider />

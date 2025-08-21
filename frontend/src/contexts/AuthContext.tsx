@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check for existing session
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       // Validate token with backend
       validateToken(token);
@@ -58,14 +58,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (data.success) {
           setUser(data.user);
         } else {
-          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('authToken');
         }
       } else {
-        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
       }
     } catch (error) {
       console.error('Token validation error:', error);
-      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       
       if (data.success) {
-        localStorage.setItem('authToken', data.token);
+        sessionStorage.setItem('authToken', data.token);
         setUser(data.user);
       } else {
         throw new Error(data.error || 'Login failed');
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
     setUser(null);
   };
 

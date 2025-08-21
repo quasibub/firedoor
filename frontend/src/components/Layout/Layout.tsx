@@ -86,7 +86,10 @@ const Layout: React.FC = () => {
             onError={(e) => {
               // Fallback to text if image fails to load
               e.currentTarget.style.display = 'none';
-              e.currentTarget.nextSibling.style.display = 'block';
+              const nextSibling = e.currentTarget.nextSibling as HTMLElement;
+              if (nextSibling) {
+                nextSibling.style.display = 'block';
+              }
             }}
           />
           <Typography 

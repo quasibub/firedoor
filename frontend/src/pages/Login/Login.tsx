@@ -154,11 +154,23 @@ const Login: React.FC = () => {
             order: { xs: 1, md: 2 },
             flex: 1,
             maxWidth: { xs: '100%', md: '600px' },
-            minHeight: { xs: '200px', md: 'auto' },
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            minHeight: { xs: '200px', md: '400px' },
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
             borderRadius: 2,
-            p: 2,
-            border: '2px dashed rgba(255, 255, 255, 0.3)',
+            p: 3,
+            border: '3px solid rgba(255, 255, 255, 0.5)',
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '20px',
+              height: '20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              borderRadius: '50%',
+            }
           }}
         >
           <img 
@@ -169,6 +181,8 @@ const Login: React.FC = () => {
               width: '100%',
               maxWidth: '400px',
               filter: 'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)',
+              zIndex: 1,
+              position: 'relative',
             }}
             onLoad={() => console.log('✅ logovectorwebsite.svg loaded successfully')}
             onError={(e) => {

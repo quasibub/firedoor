@@ -54,10 +54,12 @@ const Login: React.FC = () => {
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 4,
           width: '100%',
           maxWidth: 1200,
           flexDirection: { xs: 'column', md: 'row' },
+          minHeight: { xs: 'auto', md: '500px' },
         }}
       >
         {/* Login Box - Left Side */}
@@ -69,6 +71,7 @@ const Login: React.FC = () => {
             maxWidth: 400,
             borderRadius: 2,
             order: { xs: 2, md: 1 },
+            flexShrink: 0,
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -153,6 +156,7 @@ const Login: React.FC = () => {
             justifyContent: 'center',
             order: { xs: 1, md: 2 },
             flex: 1,
+            minWidth: { xs: '100%', md: '400px' },
             maxWidth: { xs: '100%', md: '600px' },
             minHeight: { xs: '200px', md: '400px' },
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -177,10 +181,11 @@ const Login: React.FC = () => {
             src="/logovectorwebsite.svg" 
             alt="FigTree Vector Logo" 
             style={{ 
-              height: 'auto',
-              width: '100%',
+              height: '300px',
+              width: 'auto',
               maxWidth: '400px',
-              filter: 'brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)',
+              // Remove complex filter that might be hiding the logo
+              filter: 'brightness(0) saturate(100%) invert(100%)',
               zIndex: 1,
               position: 'relative',
             }}

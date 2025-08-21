@@ -147,56 +147,6 @@ const Login: React.FC = () => {
             </Button>
           </form>
         </Paper>
-
-        {/* Logo - Right Side (Desktop) / Above Login (Mobile) */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            order: { xs: 1, md: 2 },
-            flex: 1,
-            minWidth: { xs: '100%', md: '400px' },
-            maxWidth: { xs: '100%', md: '600px' },
-            minHeight: { xs: '200px', md: '400px' },
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            borderRadius: 2,
-            p: 3,
-            border: '3px solid rgba(255, 255, 255, 0.5)',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '20px',
-              height: '20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.5)',
-              borderRadius: '50%',
-            }
-          }}
-        >
-          <img 
-            src="/logovectorwebsite.svg" 
-            alt="FigTree Vector Logo" 
-            style={{ 
-              height: '300px',
-              width: 'auto',
-              maxWidth: '400px',
-              filter: 'brightness(0) saturate(100%) invert(100%)',
-              zIndex: 1,
-              position: 'relative',
-              objectFit: 'contain',
-            }}
-            onLoad={() => console.log('✅ logovectorwebsite.svg loaded successfully')}
-            onError={(e) => {
-              console.error('❌ Failed to load logovectorwebsite.svg');
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </Box>
       </Box>
     </Box>
   );

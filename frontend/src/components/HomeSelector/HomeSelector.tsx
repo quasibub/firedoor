@@ -47,7 +47,7 @@ const HomeSelector: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <BusinessIcon color="primary" />
+      <HomeIcon color="primary" fontSize="small" />
       
       <FormControl size="small" sx={{ minWidth: 200 }}>
         <Select
@@ -88,7 +88,7 @@ const HomeSelector: React.FC = () => {
           size="small"
           color="primary"
           variant="outlined"
-          icon={<HomeIcon />}
+          icon={<HomeIcon color="primary" />}
         />
       )}
     </Box>

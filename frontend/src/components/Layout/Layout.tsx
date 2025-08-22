@@ -26,7 +26,6 @@ import {
   Business as BusinessIcon,
   Report as ReportIcon,
   TrendingUp as TrendingUpIcon,
-  Home as HomeIcon,
   AccountCircle,
   Logout,
 } from '@mui/icons-material';

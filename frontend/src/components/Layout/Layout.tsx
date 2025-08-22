@@ -141,6 +141,7 @@ const Layout: React.FC = () => {
               px: 0,
               wordBreak: 'break-word',
               lineHeight: 1.2,
+              fontSize: '1.3rem',
             }}
           >
             FigTree DoorCheck

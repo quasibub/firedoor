@@ -10,7 +10,6 @@ import {
 } from '@mui/material';
 import {
   Home as HomeIcon,
-  Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useHome } from '../../contexts/HomeContext';
 

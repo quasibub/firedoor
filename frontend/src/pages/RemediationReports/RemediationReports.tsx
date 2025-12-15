@@ -120,6 +120,7 @@ const RemediationReports: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskDetailOpen, setTaskDetailOpen] = useState(false);
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
+  const [pdfExporting, setPdfExporting] = useState(false);
 
   // Fetch remediation report
   const fetchReport = async () => {
@@ -392,300 +393,437 @@ PRIORITY BREAKDOWN
   const exportAsPDF = async () => {
     if (!report) return;
     
-    const doc = new jsPDF();
-    let yPosition = 20;
+    try {
+      setPdfExporting(true);
+      const doc = new jsPDF();
+      let yPosition = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - (2 * margin);
 
-    // Helper function to safely update yPosition
-    const updateYPosition = (increment: number) => {
-      yPosition += increment;
-      return yPosition;
-    };
+      // Helper function to safely update yPosition
+      const updateYPosition = (increment: number) => {
+        yPosition += increment;
+        return yPosition;
+      };
 
-    // Helper function to check and handle page breaks
-    const checkPageBreak = (requiredSpace: number) => {
-      if (yPosition + requiredSpace > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-    };
+      // Helper function to check and handle page breaks
+      const checkPageBreak = (requiredSpace: number) => {
+        if (yPosition + requiredSpace > pageHeight - 20) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      };
 
-    // Helper function to add text safely
-    const addText = (text: string, x: number, y: number, fontSize: number = 11, fontStyle: string = 'normal') => {
-      doc.setFontSize(fontSize);
-      doc.setFont('helvetica', fontStyle);
-      doc.text(text, x, y);
-    };
+      // Helper function to add text with word wrapping
+      const addText = (text: string, x: number, y: number, fontSize: number = 11, fontStyle: string = 'normal', maxLineWidth?: number): number => {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', fontStyle);
+        const textWidth = maxLineWidth || (pageWidth - x - margin);
+        const lines = doc.splitTextToSize(text || '', textWidth);
+        doc.text(lines, x, y);
+        return lines.length * (fontSize * 0.4); // Return height used
+      };
 
-    // Helper function to process and embed a single photo
-    const processPhoto = async (photo: any, currentYPos: number): Promise<number> => {
-      try {
-        const response = await fetch(photo.photo_url);
-        if (response.ok) {
-          const blob = await response.blob();
-          const reader = new FileReader();
+      // Helper function to center text
+      const addCenteredText = (text: string, y: number, fontSize: number = 11, fontStyle: string = 'normal') => {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', fontStyle);
+        const textWidth = doc.getTextWidth(text);
+        const x = (pageWidth - textWidth) / 2;
+        doc.text(text, x, y);
+      };
+
+      // Helper function to compress/resize image using canvas to reduce size
+      const compressImage = (base64: string, maxWidth: number, maxHeight: number, quality: number = 0.7): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              // Calculate new dimensions
+              let width = img.width;
+              let height = img.height;
+              
+              if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width = width * ratio;
+                height = height * ratio;
+              }
+              
+              // Create canvas and resize/compress
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              
+              if (!ctx) {
+                reject(new Error('Could not get canvas context'));
+                return;
+              }
+              
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Convert to JPEG with compression (JPEG is smaller than PNG)
+              const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+              resolve(compressedBase64);
+            } catch (err) {
+              reject(err);
+            }
+          };
           
-          return new Promise<number>((resolve) => {
-            reader.onload = () => {
-              const base64 = reader.result as string;
-              const img = new Image();
-              
-              img.onload = () => {
-                let imgWidth = img.width;
-                let imgHeight = img.height;
-                
-                // Calculate image dimensions to fit in PDF
-                const maxWidth = 160; // mm
-                const maxHeight = 80; // mm
-                
-                // Scale down if too large
-                if (imgWidth > maxWidth) {
-                  const ratio = maxWidth / imgWidth;
-                  imgWidth = maxWidth;
-                  imgHeight = imgHeight * ratio;
-                }
-                
-                if (imgHeight > maxHeight) {
-                  const ratio = maxHeight / imgHeight;
-                  imgHeight = maxHeight;
-                  imgWidth = imgWidth * ratio;
-                }
-                
-                // Check if we need a new page for the image
-                if (currentYPos + imgHeight > 250) {
-                  doc.addPage();
-                  currentYPos = 20;
-                }
-                
-                // Add image to PDF
-                doc.addImage(base64, 'JPEG', 25, currentYPos, imgWidth, imgHeight);
-                resolve(currentYPos + imgHeight + 5);
-              };
-              
-              img.onerror = () => {
-                // Fallback to placeholder if image fails to load
-                doc.rect(25, currentYPos, 50, 30);
-                doc.text('Photo Error', 30, currentYPos + 15);
-                resolve(currentYPos + 35);
-              };
-              
-              img.src = base64;
-            };
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = base64;
+        });
+      };
+
+      // Helper function to process and embed a single photo
+      const processPhoto = async (photo: any, currentYPos: number): Promise<number> => {
+        try {
+          const response = await fetch(photo.photo_url);
+          if (response.ok) {
+            const blob = await response.blob();
+            const reader = new FileReader();
             
-            reader.readAsDataURL(blob);
-          });
-        } else {
-          // Fallback to placeholder if image fetch fails
-          doc.rect(25, currentYPos, 50, 30);
-          doc.text('Photo Unavailable', 30, currentYPos + 15);
+            return new Promise<number>((resolve, reject) => {
+              reader.onerror = () => reject(new Error('Failed to read image'));
+              
+              reader.onload = async () => {
+                try {
+                  const originalBase64 = reader.result as string;
+                  
+                  // Compress image to reduce size and prevent RangeError
+                  // Target: max 600px width/height, 60% quality to significantly reduce file size
+                  // This prevents the "Invalid string length" error when processing many large images
+                  const compressedBase64 = await compressImage(originalBase64, 600, 600, 0.6);
+                  
+                  // Now process the compressed image
+                  const img = new Image();
+                  
+                  img.onload = () => {
+                    try {
+                      let imgWidth = img.width;
+                      let imgHeight = img.height;
+                      
+                      // Calculate image dimensions to fit in PDF (convert pixels to mm)
+                      const maxWidth = 160; // mm
+                      const maxHeight = 80; // mm
+                      
+                      // Convert pixel dimensions to mm (assuming 96 DPI)
+                      const pxToMm = 0.264583;
+                      imgWidth = imgWidth * pxToMm;
+                      imgHeight = imgHeight * pxToMm;
+                      
+                      // Scale down if too large
+                      if (imgWidth > maxWidth) {
+                        const ratio = maxWidth / imgWidth;
+                        imgWidth = maxWidth;
+                        imgHeight = imgHeight * ratio;
+                      }
+                      
+                      if (imgHeight > maxHeight) {
+                        const ratio = maxHeight / imgHeight;
+                        imgHeight = maxHeight;
+                        imgWidth = imgWidth * ratio;
+                      }
+                      
+                      // Check if we need a new page for the image
+                      if (currentYPos + imgHeight > pageHeight - 20) {
+                        doc.addPage();
+                        currentYPos = 20;
+                      }
+                      
+                      // Use JPEG format (smaller than PNG)
+                      // Add image to PDF using compressed base64
+                      doc.addImage(compressedBase64, 'JPEG', margin + 5, currentYPos, imgWidth, imgHeight);
+                      resolve(currentYPos + imgHeight + 5);
+                    } catch (imgError) {
+                      console.error('Error adding image to PDF:', imgError);
+                      // Check if it's the RangeError we're trying to fix
+                      if (imgError instanceof RangeError) {
+                        console.warn('Image too large, skipping photo embedding');
+                        doc.text('Photo too large to embed', margin + 5, currentYPos + 10);
+                        resolve(currentYPos + 20);
+                      } else {
+                        doc.rect(margin + 5, currentYPos, 50, 30);
+                        doc.text('Photo Error', margin + 10, currentYPos + 15);
+                        resolve(currentYPos + 35);
+                      }
+                    }
+                  };
+                  
+                  img.onerror = () => {
+                    doc.rect(margin + 5, currentYPos, 50, 30);
+                    doc.text('Photo Error', margin + 10, currentYPos + 15);
+                    resolve(currentYPos + 35);
+                  };
+                  
+                  img.src = compressedBase64;
+                } catch (err) {
+                  console.error('Error processing image:', err);
+                  if (err instanceof RangeError) {
+                    console.warn('Image processing failed due to size, skipping photo');
+                    doc.text('Photo too large to process', margin + 5, currentYPos + 10);
+                    resolve(currentYPos + 20);
+                  } else {
+                    doc.rect(margin + 5, currentYPos, 50, 30);
+                    doc.text('Photo Error', margin + 10, currentYPos + 15);
+                    resolve(currentYPos + 35);
+                  }
+                }
+              };
+              
+              reader.readAsDataURL(blob);
+            });
+          } else {
+            // Fallback to placeholder if image fetch fails
+            doc.rect(margin + 5, currentYPos, 50, 30);
+            doc.text('Photo Unavailable', margin + 10, currentYPos + 15);
+            return currentYPos + 35;
+          }
+        } catch (imageError) {
+          console.error('Error processing photo:', imageError);
+          // Check for RangeError
+          if (imageError instanceof RangeError) {
+            console.warn('Photo processing failed due to size limit');
+            doc.text('Photo too large', margin + 5, currentYPos + 10);
+            return currentYPos + 20;
+          }
+          // Fallback to placeholder if image processing fails
+          doc.rect(margin + 5, currentYPos, 50, 30);
+          doc.text('Photo Error', margin + 10, currentYPos + 15);
           return currentYPos + 35;
         }
-      } catch (imageError) {
-        // Fallback to placeholder if image processing fails
-        doc.rect(25, currentYPos, 50, 30);
-        doc.text('Photo Error', 30, currentYPos + 15);
-        return currentYPos + 35;
-      }
-    };
+      };
 
 
 
-    // Title
-    addText('FIRE DOOR REMEDIATION REPORT', 105, yPosition, 16, 'bold');
-    yPosition = updateYPosition(15);
-    
-    // Date
-    addText(`Generated: ${new Date(report.generatedAt).toLocaleString()}`, 105, yPosition, 10);
-    yPosition = updateYPosition(20);
-
-    // Summary Statistics
-    addText('SUMMARY STATISTICS', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(10);
-    
-    addText(`Total Tasks: ${report.summary.totalTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Completed Tasks: ${report.summary.completedTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Pending Tasks: ${report.summary.pendingTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`In Progress Tasks: ${report.summary.inProgressTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Rejected Tasks: ${report.summary.rejectedTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Cancelled Tasks: ${report.summary.cancelledTasks}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Overall Completion Rate: ${report.summary.completionRate}%`, 20, yPosition);
-    yPosition = updateYPosition(15);
-
-    // Priority Breakdown
-    addText('PRIORITY BREAKDOWN', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(10);
-    
-    const priorityData = [
-      ['Priority', 'Total', 'Completed', 'Pending', 'In Progress', 'Rejected'],
-      ['Critical', report.priorityBreakdown.critical.total, report.priorityBreakdown.critical.completed, report.priorityBreakdown.critical.pending, report.priorityBreakdown.critical.inProgress, report.priorityBreakdown.critical.rejected],
-      ['High', report.priorityBreakdown.high.total, report.priorityBreakdown.high.completed, report.priorityBreakdown.high.pending, report.priorityBreakdown.high.inProgress, report.priorityBreakdown.high.rejected],
-      ['Medium', report.priorityBreakdown.medium.total, report.priorityBreakdown.medium.completed, report.priorityBreakdown.medium.pending, report.priorityBreakdown.medium.inProgress, report.priorityBreakdown.medium.rejected],
-      ['Low', report.priorityBreakdown.low.total, report.priorityBreakdown.low.completed, report.priorityBreakdown.low.pending, report.priorityBreakdown.low.inProgress, report.priorityBreakdown.low.rejected]
-    ];
-
-    autoTable(doc, {
-      head: [priorityData[0]],
-      body: priorityData.slice(1),
-      startY: yPosition,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 }
-    });
-    
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
-
-    // Category Performance
-    addText('CATEGORY PERFORMANCE', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(10);
-    
-    const categoryData = [
-      ['Category', 'Total', 'Completed', 'Rate %'],
-      ...report.categoryStats.map(cat => [cat.category, cat.total, cat.completed, cat.completionRate])
-    ];
-
-    autoTable(doc, {
-      head: [categoryData[0]],
-      body: categoryData.slice(1),
-      startY: yPosition,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 }
-    });
-    
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
-
-    // Location Performance
-    addText('LOCATION PERFORMANCE', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(10);
-    
-    const locationData = [
-      ['Location', 'Total', 'Completed', 'Rate %'],
-      ...report.locationStats.map(loc => [loc.location, loc.total, loc.completed, loc.completionRate])
-    ];
-
-    autoTable(doc, {
-      head: [locationData[0]],
-      body: locationData.slice(1),
-      startY: yPosition,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 }
-    });
-    
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
-
-    // Recent Activity
-    addText('RECENT ACTIVITY (Last 30 Days)', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(10);
-    
-    addText(`Completions: ${report.recentActivity.completions}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Photos Uploaded: ${report.recentActivity.photos}`, 20, yPosition);
-    yPosition = updateYPosition(6);
-    addText(`Rejections: ${report.recentActivity.rejections}`, 20, yPosition);
-    yPosition = updateYPosition(15);
-
-    // Task Details with Photos
-    addText('TASK DETAILS WITH PHOTOS', 20, yPosition, 12, 'bold');
-    yPosition = updateYPosition(15);
-
-    for (let i = 0; i < report.tasks.length; i++) {
-      const task = report.tasks[i];
+      // Title (centered)
+      addCenteredText('FIRE DOOR REMEDIATION REPORT', yPosition, 16, 'bold');
+      yPosition = updateYPosition(15);
       
-      // Check if we need a new page for the task
-      checkPageBreak(100);
+      // Date (centered)
+      addCenteredText(`Generated: ${new Date(report.generatedAt).toLocaleString()}`, yPosition, 10);
+      yPosition = updateYPosition(20);
+
+      // Summary Statistics
+      const summaryHeight = addText('SUMMARY STATISTICS', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(summaryHeight + 10);
       
-      addText(`${i + 1}. ${task.title}`, 20, yPosition, 11, 'bold');
-      yPosition = updateYPosition(8);
+      const totalTasksHeight = addText(`Total Tasks: ${report.summary.totalTasks}`, margin, yPosition);
+      yPosition = updateYPosition(totalTasksHeight + 6);
+      const completedHeight = addText(`Completed Tasks: ${report.summary.completedTasks}`, margin, yPosition);
+      yPosition = updateYPosition(completedHeight + 6);
+      const pendingHeight = addText(`Pending Tasks: ${report.summary.pendingTasks}`, margin, yPosition);
+      yPosition = updateYPosition(pendingHeight + 6);
+      const inProgressHeight = addText(`In Progress Tasks: ${report.summary.inProgressTasks}`, margin, yPosition);
+      yPosition = updateYPosition(inProgressHeight + 6);
+      const rejectedHeight = addText(`Rejected Tasks: ${report.summary.rejectedTasks}`, margin, yPosition);
+      yPosition = updateYPosition(rejectedHeight + 6);
+      const cancelledHeight = addText(`Cancelled Tasks: ${report.summary.cancelledTasks}`, margin, yPosition);
+      yPosition = updateYPosition(cancelledHeight + 6);
+      const rateHeight = addText(`Overall Completion Rate: ${report.summary.completionRate}%`, margin, yPosition);
+      yPosition = updateYPosition(rateHeight + 15);
+
+      // Priority Breakdown
+      const priorityTitleHeight = addText('PRIORITY BREAKDOWN', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(priorityTitleHeight + 10);
       
-      addText(`Door ID: ${task.door_id}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Location: ${task.location}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Priority: ${task.priority}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Status: ${task.status}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Assigned To: ${task.assigned_to}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Category: ${task.category}`, 20, yPosition);
-      yPosition = updateYPosition(6);
-      addText(`Created: ${new Date(task.created_at).toLocaleDateString()}`, 20, yPosition);
-      yPosition = updateYPosition(6);
+      const priorityData = [
+        ['Priority', 'Total', 'Completed', 'Pending', 'In Progress', 'Rejected'],
+        ['Critical', report.priorityBreakdown.critical.total, report.priorityBreakdown.critical.completed, report.priorityBreakdown.critical.pending, report.priorityBreakdown.critical.inProgress, report.priorityBreakdown.critical.rejected],
+        ['High', report.priorityBreakdown.high.total, report.priorityBreakdown.high.completed, report.priorityBreakdown.high.pending, report.priorityBreakdown.high.inProgress, report.priorityBreakdown.high.rejected],
+        ['Medium', report.priorityBreakdown.medium.total, report.priorityBreakdown.medium.completed, report.priorityBreakdown.medium.pending, report.priorityBreakdown.medium.inProgress, report.priorityBreakdown.medium.rejected],
+        ['Low', report.priorityBreakdown.low.total, report.priorityBreakdown.low.completed, report.priorityBreakdown.low.pending, report.priorityBreakdown.low.inProgress, report.priorityBreakdown.low.rejected]
+      ];
+
+      autoTable(doc, {
+        head: [priorityData[0]],
+        body: priorityData.slice(1),
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 8 },
+        margin: { left: margin, right: margin }
+      });
       
-      if (task.completed_at) {
-        addText(`Completed: ${new Date(task.completed_at).toLocaleDateString()}`, 20, yPosition);
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+
+      // Category Performance
+      const categoryTitleHeight = addText('CATEGORY PERFORMANCE', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(categoryTitleHeight + 10);
+      
+      const categoryData = [
+        ['Category', 'Total', 'Completed', 'Rate %'],
+        ...report.categoryStats.map(cat => [cat.category || 'N/A', cat.total, cat.completed, cat.completionRate])
+      ];
+
+      autoTable(doc, {
+        head: [categoryData[0]],
+        body: categoryData.slice(1),
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 8 },
+        margin: { left: margin, right: margin }
+      });
+      
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+
+      // Location Performance
+      const locationTitleHeight = addText('LOCATION PERFORMANCE', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(locationTitleHeight + 10);
+      
+      const locationData = [
+        ['Location', 'Total', 'Completed', 'Rate %'],
+        ...report.locationStats.map(loc => [loc.location || 'N/A', loc.total, loc.completed, loc.completionRate])
+      ];
+
+      autoTable(doc, {
+        head: [locationData[0]],
+        body: locationData.slice(1),
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 8 },
+        margin: { left: margin, right: margin }
+      });
+      
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+
+      // Recent Activity
+      const recentTitleHeight = addText('RECENT ACTIVITY (Last 30 Days)', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(recentTitleHeight + 10);
+      
+      const completionsHeight = addText(`Completions: ${report.recentActivity.completions}`, margin, yPosition);
+      yPosition = updateYPosition(completionsHeight + 6);
+      const photosHeight = addText(`Photos Uploaded: ${report.recentActivity.photos}`, margin, yPosition);
+      yPosition = updateYPosition(photosHeight + 6);
+      const rejectionsHeight = addText(`Rejections: ${report.recentActivity.rejections}`, margin, yPosition);
+      yPosition = updateYPosition(rejectionsHeight + 15);
+
+      // Task Details with Photos
+      addText('TASK DETAILS WITH PHOTOS', margin, yPosition, 12, 'bold');
+      yPosition = updateYPosition(15);
+
+      for (let i = 0; i < report.tasks.length; i++) {
+        const task = report.tasks[i];
+        
+        // Check if we need a new page for the task
+        checkPageBreak(100);
+        
+        addText(`${i + 1}. ${task.title || 'Untitled Task'}`, margin, yPosition, 11, 'bold');
+        yPosition = updateYPosition(8);
+        
+        addText(`Door ID: ${task.door_id || 'N/A'}`, margin, yPosition);
         yPosition = updateYPosition(6);
-      }
-      
-      yPosition = updateYPosition(3);
-      addText(`Description: ${task.description}`, 20, yPosition);
-      yPosition = updateYPosition(8);
-      
-      yPosition = updateYPosition(3);
-      
-      // Photos section
-      if (task.photos && task.photos.length > 0) {
-        addText(`Photos (${task.photos.length}):`, 20, yPosition);
-        yPosition = updateYPosition(8);
+        addText(`Location: ${task.location || 'N/A'}`, margin, yPosition);
+        yPosition = updateYPosition(6);
+        addText(`Priority: ${task.priority || 'N/A'}`, margin, yPosition);
+        yPosition = updateYPosition(6);
+        addText(`Status: ${task.status || 'N/A'}`, margin, yPosition);
+        yPosition = updateYPosition(6);
+        addText(`Assigned To: ${task.assigned_to || 'Unassigned'}`, margin, yPosition);
+        yPosition = updateYPosition(6);
+        addText(`Category: ${task.category || 'N/A'}`, margin, yPosition);
+        yPosition = updateYPosition(6);
+        addText(`Created: ${new Date(task.created_at).toLocaleDateString()}`, margin, yPosition);
+        yPosition = updateYPosition(6);
         
-        for (let j = 0; j < task.photos.length; j++) {
-          const photo = task.photos[j];
-          
-          try {
-            // Add photo information to PDF
-            addText(`Photo ${j + 1}: ${photo.description || 'No description'}`, 25, yPosition);
-            yPosition = updateYPosition(6);
-            addText(`Uploaded: ${new Date(photo.created_at).toLocaleDateString()}`, 25, yPosition);
-            yPosition = updateYPosition(6);
-            addText(`By: ${photo.uploaded_by_name || 'Unknown'}`, 25, yPosition);
-            yPosition = updateYPosition(8);
-            
-             // Process and embed the photo using the helper function
-             yPosition = await processPhoto(photo, yPosition);
-            
-          } catch (error) {
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Photo ${j + 1}: Error processing`, 25, yPosition);
-            yPosition = updateYPosition(6);
-          }
-          
-          // Check if we need a new page
-          checkPageBreak(50);
-        }
-      }
-      
-      // Rejections section
-      if (task.rejections && task.rejections.length > 0) {
-        yPosition = updateYPosition(3);
-        addText(`Rejections (${task.rejections.length}):`, 20, yPosition, 11, 'bold');
-        yPosition = updateYPosition(8);
-        
-        for (let index = 0; index < task.rejections.length; index++) {
-          const rejection = task.rejections[index];
-          addText(`Rejection ${index + 1}: ${rejection.rejection_reason}`, 25, yPosition);
+        if (task.completed_at) {
+          addText(`Completed: ${new Date(task.completed_at).toLocaleDateString()}`, margin, yPosition);
           yPosition = updateYPosition(6);
-          if (rejection.alternative_suggestion) {
-            addText(`Suggestion: ${rejection.alternative_suggestion}`, 25, yPosition);
-            yPosition = updateYPosition(6);
+        }
+        
+        yPosition = updateYPosition(3);
+        const descHeight = addText(`Description: ${task.description || 'No description'}`, margin, yPosition, 10, 'normal', maxWidth);
+        yPosition = updateYPosition(descHeight + 3);
+        
+        // Photos section
+        if (task.photos && task.photos.length > 0) {
+          addText(`Photos (${task.photos.length}):`, margin, yPosition, 10, 'bold');
+          yPosition = updateYPosition(8);
+          
+          for (let j = 0; j < task.photos.length; j++) {
+            const photo = task.photos[j];
+            
+            try {
+              // Add photo information to PDF
+              addText(`Photo ${j + 1}: ${photo.description || 'No description'}`, margin + 5, yPosition);
+              yPosition = updateYPosition(6);
+              addText(`Uploaded: ${new Date(photo.created_at).toLocaleDateString()}`, margin + 5, yPosition);
+              yPosition = updateYPosition(6);
+              addText(`By: ${photo.uploaded_by_name || 'Unknown'}`, margin + 5, yPosition);
+              yPosition = updateYPosition(8);
+              
+              // Process and embed the photo using the helper function
+              yPosition = await processPhoto(photo, yPosition);
+              
+            } catch (error) {
+              console.error(`Error processing photo ${j + 1}:`, error);
+              doc.setFontSize(9);
+              doc.setFont('helvetica', 'normal');
+              doc.text(`Photo ${j + 1}: Error processing`, margin + 5, yPosition);
+              yPosition = updateYPosition(6);
+            }
+            
+            // Check if we need a new page
+            checkPageBreak(50);
           }
+        }
+        
+        // Rejections section
+        if (task.rejections && task.rejections.length > 0) {
           yPosition = updateYPosition(3);
+          const rejectionsTitleHeight = addText(`Rejections (${task.rejections.length}):`, margin, yPosition, 11, 'bold');
+          yPosition = updateYPosition(rejectionsTitleHeight + 8);
+          
+          for (let index = 0; index < task.rejections.length; index++) {
+            const rejection = task.rejections[index];
+            const rejHeight = addText(`Rejection ${index + 1}: ${rejection.rejection_reason || 'No reason provided'}`, margin + 5, yPosition, 10, 'normal', maxWidth - 5);
+            yPosition = updateYPosition(rejHeight + 3);
+            if (rejection.alternative_suggestion) {
+              const sugHeight = addText(`Suggestion: ${rejection.alternative_suggestion}`, margin + 5, yPosition, 10, 'normal', maxWidth - 5);
+              yPosition = updateYPosition(sugHeight + 3);
+            }
+            yPosition = updateYPosition(3);
+          }
+        }
+        
+        yPosition = updateYPosition(10); // Space between tasks
+      }
+     
+      // Save the PDF - wrap in try-catch to handle RangeError
+      try {
+        doc.save(`remediation-report-${new Date().toISOString().split('T')[0]}.pdf`);
+        handleExportMenuClose();
+      } catch (saveError) {
+        // Handle RangeError specifically for PDF save
+        if (saveError instanceof RangeError) {
+          console.error('PDF too large to save - exceeded string length limit');
+          setError('PDF is too large to generate. Try filtering the report to fewer tasks or photos.');
+          alert('The PDF is too large to generate. Please filter the report to include fewer items or photos.');
+          handleExportMenuClose();
+          return;
+        } else {
+          throw saveError; // Re-throw if it's a different error
         }
       }
+    } catch (pdfError) {
+      console.error('Error generating PDF:', pdfError);
       
-      yPosition = updateYPosition(10); // Space between tasks
+      // Handle RangeError specifically
+      if (pdfError instanceof RangeError && (pdfError.message.includes('Invalid string length') || pdfError.message.includes('Maximum call stack'))) {
+        setError('PDF is too large to generate. The report contains too many large images. Try filtering the report or reducing image sizes.');
+        alert('PDF generation failed: The report is too large. Please filter the report to include fewer tasks or photos.');
+      } else {
+        setError(`Failed to generate PDF: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
+        alert(`Failed to generate PDF. Please check the console for details.`);
+      }
+    } finally {
+      setPdfExporting(false);
     }
-   
-   // Save the PDF
-   doc.save(`remediation-report-${new Date().toISOString().split('T')[0]}.pdf`);
-   handleExportMenuClose();
- };
+  };
 
   if (loading) {
     return <Typography>Loading remediation report...</Typography>;
@@ -708,8 +846,9 @@ PRIORITY BREAKDOWN
           startIcon={<DownloadIcon />}
           endIcon={<MoreVertIcon />}
           onClick={handleExportMenuOpen}
+          disabled={pdfExporting}
         >
-          Export Report
+          {pdfExporting ? 'Generating PDF...' : 'Export Report'}
         </Button>
         <Menu
           anchorEl={exportMenuAnchor}

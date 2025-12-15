@@ -26,6 +26,7 @@ import {
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import API_ENDPOINTS from '../../config/api';
+import { useHome } from '../../contexts/HomeContext';
 
 interface PDFUploadDialogProps {
   open: boolean;
@@ -59,6 +60,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
   const [uploading, setUploading] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { selectedHome } = useHome();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -72,7 +74,14 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
       const formData = new FormData();
       formData.append('pdf', file);
 
-      const response = await axios.post(API_ENDPOINTS.PDF_UPLOAD, formData, {
+      const uploadUrl = selectedHome?.id
+        ? `${API_ENDPOINTS.PDF_UPLOAD}?home_id=${encodeURIComponent(selectedHome.id)}`
+        : API_ENDPOINTS.PDF_UPLOAD;
+
+      console.log('PDF Upload - Selected home:', selectedHome?.name, 'Home ID:', selectedHome?.id);
+      console.log('PDF Upload - Upload URL:', uploadUrl);
+
+      const response = await axios.post(uploadUrl, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -89,7 +98,7 @@ const PDFUploadDialog: React.FC<PDFUploadDialogProps> = ({
     } finally {
       setUploading(false);
     }
-  }, []);
+  }, [selectedHome]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

@@ -483,98 +483,97 @@ PRIORITY BREAKDOWN
           const response = await fetch(photo.photo_url);
           if (response.ok) {
             const blob = await response.blob();
-            const reader = new FileReader();
             
-            return new Promise<number>((resolve, reject) => {
+            // Read blob as base64
+            const originalBase64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
               reader.onerror = () => reject(new Error('Failed to read image'));
-              
-              reader.onload = async () => {
-                try {
-                  const originalBase64 = reader.result as string;
-                  
-                  // Compress image to reduce size and prevent RangeError
-                  // Target: max 600px width/height, 60% quality to significantly reduce file size
-                  // This prevents the "Invalid string length" error when processing many large images
-                  const compressedBase64 = await compressImage(originalBase64, 600, 600, 0.6);
-                  
-                  // Now process the compressed image
-                  const img = new Image();
-                  
-                  img.onload = () => {
-                    try {
-                      let imgWidth = img.width;
-                      let imgHeight = img.height;
-                      
-                      // Calculate image dimensions to fit in PDF (convert pixels to mm)
-                      const maxWidth = 160; // mm
-                      const maxHeight = 80; // mm
-                      
-                      // Convert pixel dimensions to mm (assuming 96 DPI)
-                      const pxToMm = 0.264583;
-                      imgWidth = imgWidth * pxToMm;
-                      imgHeight = imgHeight * pxToMm;
-                      
-                      // Scale down if too large
-                      if (imgWidth > maxWidth) {
-                        const ratio = maxWidth / imgWidth;
-                        imgWidth = maxWidth;
-                        imgHeight = imgHeight * ratio;
-                      }
-                      
-                      if (imgHeight > maxHeight) {
-                        const ratio = maxHeight / imgHeight;
-                        imgHeight = maxHeight;
-                        imgWidth = imgWidth * ratio;
-                      }
-                      
-                      // Check if we need a new page for the image
-                      if (currentYPos + imgHeight > pageHeight - 20) {
-                        doc.addPage();
-                        currentYPos = 20;
-                      }
-                      
-                      // Use JPEG format (smaller than PNG)
-                      // Add image to PDF using compressed base64
-                      doc.addImage(compressedBase64, 'JPEG', margin + 5, currentYPos, imgWidth, imgHeight);
-                      resolve(currentYPos + imgHeight + 5);
-                    } catch (imgError) {
-                      console.error('Error adding image to PDF:', imgError);
-                      // Check if it's the RangeError we're trying to fix
-                      if (imgError instanceof RangeError) {
-                        console.warn('Image too large, skipping photo embedding');
-                        doc.text('Photo too large to embed', margin + 5, currentYPos + 10);
-                        resolve(currentYPos + 20);
-                      } else {
-                        doc.rect(margin + 5, currentYPos, 50, 30);
-                        doc.text('Photo Error', margin + 10, currentYPos + 15);
-                        resolve(currentYPos + 35);
-                      }
-                    }
-                  };
-                  
-                  img.onerror = () => {
-                    doc.rect(margin + 5, currentYPos, 50, 30);
-                    doc.text('Photo Error', margin + 10, currentYPos + 15);
-                    resolve(currentYPos + 35);
-                  };
-                  
-                  img.src = compressedBase64;
-                } catch (err) {
-                  console.error('Error processing image:', err);
-                  if (err instanceof RangeError) {
-                    console.warn('Image processing failed due to size, skipping photo');
-                    doc.text('Photo too large to process', margin + 5, currentYPos + 10);
-                    resolve(currentYPos + 20);
-                  } else {
-                    doc.rect(margin + 5, currentYPos, 50, 30);
-                    doc.text('Photo Error', margin + 10, currentYPos + 15);
-                    resolve(currentYPos + 35);
-                  }
-                }
-              };
-              
+              reader.onload = () => resolve(reader.result as string);
               reader.readAsDataURL(blob);
             });
+            
+            try {
+              // Compress image to reduce size and prevent RangeError
+              // Target: max 600px width/height, 60% quality to significantly reduce file size
+              // This prevents the "Invalid string length" error when processing many large images
+              const compressedBase64 = await compressImage(originalBase64, 600, 600, 0.6);
+              
+              // Now process the compressed image
+              return new Promise<number>((resolve, reject) => {
+                const img = new Image();
+                
+                img.onload = () => {
+                  try {
+                    let imgWidth = img.width;
+                    let imgHeight = img.height;
+                    
+                    // Calculate image dimensions to fit in PDF (convert pixels to mm)
+                    const maxWidth = 160; // mm
+                    const maxHeight = 80; // mm
+                    
+                    // Convert pixel dimensions to mm (assuming 96 DPI)
+                    const pxToMm = 0.264583;
+                    imgWidth = imgWidth * pxToMm;
+                    imgHeight = imgHeight * pxToMm;
+                    
+                    // Scale down if too large
+                    if (imgWidth > maxWidth) {
+                      const ratio = maxWidth / imgWidth;
+                      imgWidth = maxWidth;
+                      imgHeight = imgHeight * ratio;
+                    }
+                    
+                    if (imgHeight > maxHeight) {
+                      const ratio = maxHeight / imgHeight;
+                      imgHeight = maxHeight;
+                      imgWidth = imgWidth * ratio;
+                    }
+                    
+                    // Check if we need a new page for the image
+                    if (currentYPos + imgHeight > pageHeight - 20) {
+                      doc.addPage();
+                      currentYPos = 20;
+                    }
+                    
+                    // Use JPEG format (smaller than PNG)
+                    // Add image to PDF using compressed base64
+                    doc.addImage(compressedBase64, 'JPEG', margin + 5, currentYPos, imgWidth, imgHeight);
+                    resolve(currentYPos + imgHeight + 5);
+                  } catch (imgError) {
+                    console.error('Error adding image to PDF:', imgError);
+                    // Check if it's the RangeError we're trying to fix
+                    if (imgError instanceof RangeError) {
+                      console.warn('Image too large, skipping photo embedding');
+                      doc.text('Photo too large to embed', margin + 5, currentYPos + 10);
+                      resolve(currentYPos + 20);
+                    } else {
+                      doc.rect(margin + 5, currentYPos, 50, 30);
+                      doc.text('Photo Error', margin + 10, currentYPos + 15);
+                      resolve(currentYPos + 35);
+                    }
+                  }
+                };
+                
+                img.onerror = () => {
+                  doc.rect(margin + 5, currentYPos, 50, 30);
+                  doc.text('Photo Error', margin + 10, currentYPos + 15);
+                  resolve(currentYPos + 35);
+                };
+                
+                img.src = compressedBase64;
+              });
+            } catch (err) {
+              console.error('Error processing image:', err);
+              if (err instanceof RangeError) {
+                console.warn('Image processing failed due to size, skipping photo');
+                doc.text('Photo too large to process', margin + 5, currentYPos + 10);
+                return currentYPos + 20;
+              } else {
+                doc.rect(margin + 5, currentYPos, 50, 30);
+                doc.text('Photo Error', margin + 10, currentYPos + 15);
+                return currentYPos + 35;
+              }
+            }
           } else {
             // Fallback to placeholder if image fetch fails
             doc.rect(margin + 5, currentYPos, 50, 30);

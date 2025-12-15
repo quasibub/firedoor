@@ -260,36 +260,142 @@ const extractDoorTasks = (pdfText: string): ExtractedTask[] => {
     let doorId = '';
     let fullLocation = '';
     
-    // Try to find location pattern
-    const locationMatch = section.match(/Location of door.*?\n([^\n]+)\n([^\n]+)/i) ||
-                         section.match(/Location of door.*?\nBedroom\s*\n([^\n]+)/i) ||
-                         section.match(/Location of door.*?\n([^\n]+)/i);
+    // Helper function to validate if a string looks like a valid location (not a URL or junk)
+    const isValidLocation = (text: string): boolean => {
+      if (!text || text.trim().length === 0) return false;
+      
+      const trimmed = text.trim();
+      
+      // Filter out URLs - more aggressive checking
+      if (/^https?:\/\//i.test(trimmed)) return false;
+      if (/www\.|\.com|\.org|\.net|\.uk|\.co\.uk|\.io|\.gov/i.test(trimmed)) return false;
+      if (/\/report|\/recipients|utm_source|utm_medium|utm_campaign|safetyculture/i.test(trimmed)) return false;
+      if (/http:\/\/|https:\/\//i.test(trimmed)) return false;
+      
+      // Filter out email addresses
+      if (/@/.test(trimmed)) return false;
+      
+      // Filter out very long strings (likely not a location)
+      if (trimmed.length > 100) return false;
+      
+      // Filter out strings that are mostly special characters or have too many slashes/colons (URL-like)
+      const specialCharRatio = (trimmed.match(/[^a-zA-Z0-9\s]/g) || []).length / trimmed.length;
+      if (specialCharRatio > 0.5) return false;
+      
+      // Filter out if it has multiple slashes (URL pattern)
+      if ((trimmed.match(/\//g) || []).length > 2) return false;
+      
+      // Filter out if it contains query parameters (URL pattern)
+      if (trimmed.includes('?') || trimmed.includes('&')) return false;
+      
+      // Must contain at least some letters (not just numbers/symbols)
+      if (!/[a-zA-Z]/.test(trimmed)) return false;
+      
+      return true;
+    };
     
-    if (locationMatch) {
-      if (locationMatch[2]) {
-        // Format: "Bedroom" on one line, "1B" on next
-        fullLocation = `${locationMatch[1].trim()} ${locationMatch[2].trim()}`;
-        doorId = locationMatch[2].trim();
-      } else {
-        // Format: "Bedroom 1B" on one line
-        fullLocation = locationMatch[1].trim();
+    // Try to find location pattern - be more specific about what comes after "Location of door"
+    // First, get all lines after "Location of door" and filter out invalid ones
+    const locationMatch = section.match(/Location of door[:\s]*\n\s*([^\n]+)\n\s*([^\n]+)/i);
+    const locationMatch2 = section.match(/Location of door[:\s]*\n\s*([A-Za-z][^\n]{0,50})/i);
+    const locationMatch3 = section.match(/Location of door[:\s]*\n\s*(Bedroom|Corridor|Other|Storage|Office|Kitchen|1st|2nd|3rd|Ground)[^\n]{0,50}/i);
+    
+    if (locationMatch && locationMatch[1] && locationMatch[2]) {
+      // Format: "Bedroom" on one line, "1B" on next
+      const part1 = locationMatch[1].trim();
+      const part2 = locationMatch[2].trim();
+      
+      // Validate both parts separately
+      if (isValidLocation(part1) && isValidLocation(part2)) {
+        fullLocation = `${part1} ${part2}`;
+        doorId = part2;
+      } else if (isValidLocation(part2)) {
+        // If part1 is invalid (URL), just use part2
+        fullLocation = part2;
+        doorId = part2;
+      } else if (isValidLocation(part1)) {
+        // If part2 is invalid, try to extract door ID from part1
+        fullLocation = part1;
+        const idMatch = part1.match(/(\d+[A-Z]?)$/);
+        doorId = idMatch ? idMatch[1] : part1;
+      }
+    } else if (locationMatch2 && locationMatch2[1]) {
+      // Single line format
+      const location = locationMatch2[1].trim();
+      if (isValidLocation(location)) {
+        fullLocation = location;
         // Extract the door number from the location (e.g., "1B" from "Bedroom 1B")
         const idMatch = fullLocation.match(/(\d+[A-Z]?)$/);
-        doorId = idMatch ? idMatch[1] : fullLocation;
+        doorId = idMatch ? idMatch[1] : fullLocation.split(/\s+/).pop() || fullLocation;
+      }
+    } else if (locationMatch3 && locationMatch3[1]) {
+      // Matched a known location type
+      const locationType = locationMatch3[1].trim();
+      // Try to get the rest of the line
+      const restOfLine = locationMatch3[0].replace(/Location of door[:\s]*\n\s*/i, '').trim();
+      if (isValidLocation(restOfLine)) {
+        fullLocation = restOfLine;
+        const idMatch = restOfLine.match(/(\d+[A-Z]?)$/);
+        doorId = idMatch ? idMatch[1] : restOfLine.split(/\s+/).pop() || restOfLine;
       }
     }
     
     // If no doorId found, try the door identification number
     if (!doorId) {
-      const numberMatch = section.match(/^[\s]*(\d+)/);
-      if (numberMatch) {
-        doorId = numberMatch[1];
+      const numberMatch = section.match(/Door identification number[:\s]*\n\s*(\d+[A-Z]?)/i);
+      if (numberMatch && numberMatch[1]) {
+        doorId = numberMatch[1].trim();
+        if (!fullLocation) {
+          // Try to find location text near the door ID
+          const locationNearId = section.match(/Door identification number[:\s]*\n[^\n]*\n\s*Location[^\n]*\n\s*([A-Za-z\s]+\d+[A-Z]?)/i);
+          if (locationNearId && locationNearId[1] && isValidLocation(locationNearId[1])) {
+            fullLocation = locationNearId[1].trim();
+          } else {
+            fullLocation = doorId;
+          }
+        }
       }
     }
     
-    // Default values if nothing found
-    if (!doorId) doorId = `Door-${index}`;
-    if (!fullLocation) fullLocation = doorId;
+    // Last resort: try to extract from the beginning of the section
+    // Look through the first 15 lines for valid location patterns, filtering out URLs
+    if (!doorId || !isValidLocation(fullLocation)) {
+      const firstLines = section.split('\n').slice(0, 15);
+      
+      // Try to find location patterns in the lines, skipping invalid ones
+      for (const line of firstLines) {
+        const trimmed = line.trim();
+        if (!isValidLocation(trimmed)) continue; // Skip invalid lines
+        
+        const fallbackMatch = trimmed.match(/(Bedroom|Corridor|Other|Storage|Office|Kitchen|1st floor|2nd floor|3rd floor|Ground floor|rear stairs)\s+(\d+[A-Z]?)/i);
+        if (fallbackMatch && fallbackMatch[1] && fallbackMatch[2] && isValidLocation(fallbackMatch[1]) && isValidLocation(fallbackMatch[2])) {
+          fullLocation = `${fallbackMatch[1]} ${fallbackMatch[2]}`;
+          doorId = fallbackMatch[2];
+          break;
+        }
+        
+        // Also try just finding a door number pattern
+        const doorNumMatch = trimmed.match(/\b(\d+[A-Z]?)\b/);
+        if (doorNumMatch && doorNumMatch[1] && isValidLocation(trimmed)) {
+          doorId = doorNumMatch[1];
+          fullLocation = trimmed;
+          break;
+        }
+      }
+    }
+    
+    // Final validation and defaults
+    if (!doorId || !isValidLocation(doorId)) {
+      doorId = `Door-${index}`;
+    }
+    if (!fullLocation || !isValidLocation(fullLocation)) {
+      fullLocation = doorId;
+    }
+    
+    // Final check: if location still looks like a URL after all filtering, use door ID only
+    if (/\.com|\.org|\.net|safetyculture|utm_source/i.test(fullLocation)) {
+      fullLocation = doorId;
+    }
     
     // Find the Remedial Action section for this door
     const remedialMatch = section.match(/Remedial Action([\s\S]*?)(?:Compliance Rating|$)/i);

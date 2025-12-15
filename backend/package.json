@@ -14,7 +14,8 @@
     "init-db": "ts-node src/config/init-db.ts",
     "clear-db": "ts-node src/config/clear-db.ts",
     "update-passwords": "ts-node scripts/update-default-passwords.ts",
-    "add-force-password-change": "ts-node src/config/add-force-password-change-column.ts"
+    "add-force-password-change": "ts-node src/config/add-force-password-change-column.ts",
+    "fix-wrong-home": "ts-node src/config/fix-wrong-home-assignment.ts"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.28.0",

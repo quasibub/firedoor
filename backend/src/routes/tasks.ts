@@ -16,7 +16,7 @@ const createTaskSchema = Joi.object({
   priority: Joi.string().valid('low', 'medium', 'high', 'critical').required(),
   category: Joi.string().optional().allow(''),
   assigned_to: Joi.string().required(),
-  notes: Joi.string().optional(),
+  notes: Joi.string().optional().allow(''),
 });
 
 const updateTaskSchema = Joi.object({

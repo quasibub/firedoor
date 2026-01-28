@@ -9,10 +9,11 @@ const createTaskSchema = Joi.object({
   inspection_id: Joi.string().uuid().optional().allow(null),
   door_id: Joi.string().required(),
   location: Joi.string().required(),
-  title: Joi.string().optional(),
+  // Optional, but UI may send empty string -> allow it
+  title: Joi.string().optional().allow(''),
   description: Joi.string().required(),
   priority: Joi.string().valid('low', 'medium', 'high', 'critical').required(),
-  category: Joi.string().optional(),
+  category: Joi.string().optional().allow(''),
   assigned_to: Joi.string().required(),
   notes: Joi.string().optional(),
 });

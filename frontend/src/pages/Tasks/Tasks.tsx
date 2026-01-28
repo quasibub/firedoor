@@ -74,6 +74,7 @@ const Tasks: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
   
   // Workmen-specific states
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -159,6 +160,27 @@ const Tasks: React.FC = () => {
     fetchTasks();
   }, [fetchTasks]);
 
+  // Load users for the "Assigned to" dropdown
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken');
+        const response = await fetch(API_ENDPOINTS.USERS, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data?.success && Array.isArray(data.data)) {
+          setUsers(data.data);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const handleOpenDialog = (task?: Task) => {
     if (task) {
       setEditingTask(task);
@@ -181,7 +203,7 @@ const Tasks: React.FC = () => {
         title: '',
         description: '',
         priority: 'medium',
-        assigned_to: '',
+        assigned_to: user?.name || 'Unassigned',
         notes: '',
       });
     }
@@ -909,14 +931,21 @@ const Tasks: React.FC = () => {
               <MenuItem value="critical">Critical</MenuItem>
             </Select>
           </FormControl>
-          <TextField
-            fullWidth
-            label="Assigned To"
-            value={formData.assigned_to}
-            onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-            margin="normal"
-            required
-          />
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel>Assigned to</InputLabel>
+            <Select
+              value={formData.assigned_to}
+              label="Assigned to"
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+            >
+              <MenuItem value="Unassigned">Unassigned</MenuItem>
+              {users.map((u) => (
+                <MenuItem key={u.id} value={u.name}>
+                  {u.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
             fullWidth

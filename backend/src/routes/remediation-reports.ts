@@ -10,6 +10,7 @@ router.get('/', async (req: Request, res: Response) => {
     const tasksQuery = `
       SELECT 
         t.id,
+        t.inspection_id,
         t.door_id,
         t.location,
         t.title,

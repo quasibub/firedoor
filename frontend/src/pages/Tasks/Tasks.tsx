@@ -194,6 +194,11 @@ const Tasks: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
+      const payload = {
+        ...formData,
+        inspection_id: formData.inspection_id?.trim() ? formData.inspection_id.trim() : null,
+      };
+
       if (editingTask) {
         // Update existing task
         const response = await fetch(API_ENDPOINTS.TASK_BY_ID(editingTask.id), {
@@ -201,7 +206,7 @@ const Tasks: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw new Error('Failed to update task');
@@ -213,7 +218,7 @@ const Tasks: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw new Error('Failed to create task');
@@ -860,11 +865,11 @@ const Tasks: React.FC = () => {
         <DialogContent>
           <TextField
             fullWidth
-            label="Inspection ID"
+            label="Inspection ID (optional)"
             value={formData.inspection_id}
             onChange={(e) => setFormData({ ...formData, inspection_id: e.target.value })}
             margin="normal"
-            required
+            helperText="Leave blank to add a door that is not on the original report (ad-hoc)."
           />
           <TextField
             fullWidth

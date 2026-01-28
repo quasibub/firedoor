@@ -6,11 +6,13 @@ const router = express.Router();
 
 // Validation schemas
 const createTaskSchema = Joi.object({
-  inspection_id: Joi.string().required(),
+  inspection_id: Joi.string().uuid().optional().allow(null),
   door_id: Joi.string().required(),
   location: Joi.string().required(),
+  title: Joi.string().optional(),
   description: Joi.string().required(),
   priority: Joi.string().valid('low', 'medium', 'high', 'critical').required(),
+  category: Joi.string().optional(),
   assigned_to: Joi.string().required(),
   notes: Joi.string().optional(),
 });
@@ -125,7 +127,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // @route   POST /api/tasks
-// @desc    Create new task
+// @desc    Create new task (inspection_id optional for ad-hoc doors added by workmen)
 // @access  Private
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -137,19 +139,23 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    const inspectionId = value.inspection_id || null;
+    const title = value.title || value.description;
+    const category = value.category || 'General';
+
     const { rows: [newTask] } = await pool.query(`
       INSERT INTO tasks (inspection_id, door_id, location, title, description, status, priority, category, assigned_to, notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `, [
-      value.inspection_id,
+      inspectionId,
       value.door_id,
       value.location,
-      value.description,
+      title,
       value.description,
       'pending',
       value.priority,
-      'General',
+      category,
       value.assigned_to,
       value.notes || ''
     ]);

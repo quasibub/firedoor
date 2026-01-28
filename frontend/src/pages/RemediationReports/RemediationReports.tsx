@@ -63,9 +63,10 @@ interface Task {
   notes: string;
   category: string;
   created_at: string;
-  inspection_location: string;
-  inspector_name: string;
-  inspection_date: string;
+  inspection_location?: string | null;
+  inspector_name?: string | null;
+  inspection_date?: string | null;
+  inspection_id?: string | null;
   photos: any[];
   rejections: any[];
 }
@@ -838,7 +839,7 @@ PRIORITY BREAKDOWN
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
         <Typography variant="h4">Remediation Report</Typography>
         <Button
           variant="contained"
@@ -1143,7 +1144,14 @@ PRIORITY BREAKDOWN
               <TableBody>
                 {filteredTasks.map((task) => (
                   <TableRow key={task.id}>
-                    <TableCell>{task.door_id}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {task.door_id}
+                        {!task.inspection_id && (
+                          <Chip label="Ad-hoc" size="small" color="info" variant="outlined" />
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>{task.location}</TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight="medium">
@@ -1187,6 +1195,9 @@ PRIORITY BREAKDOWN
         <DialogContent>
           {selectedTask && (
             <Box>
+              {!selectedTask.inspection_id && (
+                <Chip label="Added by workmen (not on report)" color="info" size="small" sx={{ mb: 1 }} />
+              )}
               <Typography variant="h6" gutterBottom>{selectedTask.title}</Typography>
               <Typography variant="body1" paragraph>{selectedTask.description}</Typography>
               

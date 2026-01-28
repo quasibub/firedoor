@@ -116,13 +116,11 @@ const Tasks: React.FC = () => {
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      // Workmen should still be able to see/add ad-hoc doors even if no Home is selected
-      const url =
-        selectedHome
-          ? `${API_ENDPOINTS.TASKS}?limit=2000&home_id=${selectedHome.id}`
-          : `${API_ENDPOINTS.TASKS}?limit=2000`;
-
-      // Request a larger limit to get more tasks (or all tasks)
+      // If a home is selected, filter by home_id; otherwise show all tasks
+      const url = selectedHome
+        ? `${API_ENDPOINTS.TASKS}?limit=2000&home_id=${selectedHome.id}`
+        : `${API_ENDPOINTS.TASKS}?limit=2000`;
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
@@ -220,6 +218,7 @@ const Tasks: React.FC = () => {
       const payload = {
         ...formData,
         inspection_id: formData.inspection_id?.trim() ? formData.inspection_id.trim() : null,
+        home_id: selectedHome?.id || null,
       };
 
       if (editingTask) {

@@ -7,6 +7,7 @@ const router = express.Router();
 // Validation schemas
 const createTaskSchema = Joi.object({
   inspection_id: Joi.string().uuid().optional().allow(null),
+  home_id: Joi.string().uuid().optional().allow(null),
   door_id: Joi.string().required(),
   location: Joi.string().required(),
   // Optional, but UI may send empty string -> allow it
@@ -141,15 +142,17 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const inspectionId = value.inspection_id || null;
+    const homeId = value.home_id || null;
     const title = value.title || value.description;
     const category = value.category || 'General';
 
     const { rows: [newTask] } = await pool.query(`
-      INSERT INTO tasks (inspection_id, door_id, location, title, description, status, priority, category, assigned_to, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO tasks (inspection_id, home_id, door_id, location, title, description, status, priority, category, assigned_to, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `, [
       inspectionId,
+      homeId,
       value.door_id,
       value.location,
       title,
